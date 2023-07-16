@@ -1,7 +1,22 @@
 [package]
 name = "cdwe"
+description = "cd with env vars"
 version = "0.1.0"
 edition = "2021"
+authors = ["synoet"]
+include = ["src/**/*.rs", "shells/*"]
+categories = ["command-line-utilities"]
+homepage = "https://github.com/synoet/cdwe"
+repository = "https://github.com/synoet/cdwe"
+license = "MIT"
+readme = "README.md"
+keywords = [
+    "cli",
+    "command",
+    "command-line",
+    "shell",
+    "tool",
+]
 
 [dependencies]
 anyhow = "1.0.72"
