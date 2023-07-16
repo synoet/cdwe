@@ -51,8 +51,6 @@ impl Shell {
                 .unwrap()
                 .to_string(),
         }
-
-
     }
 }
 

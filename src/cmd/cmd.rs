@@ -1,5 +1,5 @@
 use crate::cmd::init::Shell;
-use clap::{Subcommand, command, Parser};
+use clap::{command, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 pub struct Cli {

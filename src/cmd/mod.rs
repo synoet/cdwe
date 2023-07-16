@@ -1,8 +1,7 @@
 mod cmd;
-mod run;
 mod init;
+mod run;
 
-
-pub use init::{Shell, init_shell};
-pub use cmd::{Commands, Cli};
-pub use run::{run};
+pub use cmd::{Cli, Commands};
+pub use init::{init_shell, Shell};
+pub use run::run;

@@ -2,12 +2,16 @@ mod cmd;
 mod config;
 use anyhow::Result;
 use clap::Parser;
-use cmd::{Cli, init_shell, run};
+use cmd::{init_shell, run, Cli};
 use config::Config;
 
 fn main() -> Result<()> {
     let matches = Cli::parse();
-    let config = Config::from_config_file(&format!("{}/{}", std::env::var("HOME").unwrap(), "cdwe.toml"))?;
+    let config = Config::from_config_file(&format!(
+        "{}/{}",
+        std::env::var("HOME").unwrap(),
+        "cdwe.toml"
+    ))?;
 
     match matches.command {
         cmd::Commands::Init { shell } => {

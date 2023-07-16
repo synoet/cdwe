@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use anyhow::{Result, anyhow};
 use super::super::config::{Config, EnvDirectory};
+use anyhow::{anyhow, Result};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct EnvVar {
