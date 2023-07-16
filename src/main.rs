@@ -1,36 +1,21 @@
+mod cmd;
 mod config;
-mod vars;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
+use cmd::{Cli, init_shell, run};
 use config::Config;
 
-#[derive(Parser)]
-struct Args {
-    #[arg(long = "old_dir", required=true)]
-    old_dir: String,
-    #[arg(long = "new_dir", required=true)]
-    new_dir: String,
-}
-
 fn main() -> Result<()> {
-    let matches = Args::parse();
-    #[allow(deprecated)]
-    let home_dir = match std::env::home_dir() {
-        Some(path) => path,
-        None => return Err(anyhow!("Could not find home directory")),
-    };
+    let matches = Cli::parse();
+    let config = Config::from_config_file(&format!("{}/{}", std::env::var("HOME").unwrap(), "cdwe.toml"))?;
 
-    let config =
-        Config::from_config_file(&format!("{}/{}", home_dir.to_str().unwrap(), "cdwe.toml"))?;
-
-    let to_set = vars::get_vars_to_set(&config, &matches.new_dir);
-    let to_unset = vars::get_vars_to_unset(&config, &matches.old_dir);
-
-    for var in to_set {
-        println!("export {}=\"{}\"", var.key, var.value);
-    }
-    for var in to_unset {
-        println!("unset {}", var);
+    match matches.command {
+        cmd::Commands::Init { shell } => {
+            init_shell(shell.unwrap())?;
+        }
+        cmd::Commands::Run { old_dir, new_dir } => {
+            run(&config, old_dir, new_dir)?;
+        }
     }
 
     Ok(())

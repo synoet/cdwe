@@ -6,7 +6,6 @@ function cdwe() {
   local new_dir="$PWD"
 
   local result
-  result="$(/Users/synoet/dev/cdwe/target/release/cdwe --old_dir="$old_dir" --new_dir="$new_dir")"
+  result="$({{{exec_path}}} run --old_dir="$old_dir" --new_dir="$new_dir")"
   eval "${result}"
 }
-
