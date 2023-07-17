@@ -34,6 +34,10 @@ pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
 }
 
 pub fn run(_config: &Config, old_path: String, new_path: String) -> Result<(), anyhow::Error> {
+    if old_path == new_path {
+        return Ok(());
+    }
+
     #[allow(deprecated)]
     let home_dir = match std::env::home_dir() {
         Some(path) => path,
@@ -46,11 +50,12 @@ pub fn run(_config: &Config, old_path: String, new_path: String) -> Result<(), a
     let to_set = get_vars_to_set(&config, &new_path);
     let to_unset = get_vars_to_unset(&config, &old_path);
 
-    for var in to_set {
-        println!("export {}=\"{}\"", var.key, var.value);
-    }
     for var in to_unset {
         println!("unset {}", var);
+    }
+
+    for var in to_set {
+        println!("export {}=\"{}\"", var.key, var.value);
     }
 
     Ok(())
