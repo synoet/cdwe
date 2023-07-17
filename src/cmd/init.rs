@@ -1,6 +1,6 @@
-use anyhow::{Result, Context};
-use clap::ValueEnum;
 use super::super::config::{Config, GlobalConfig};
+use anyhow::{Context, Result};
+use clap::ValueEnum;
 
 #[derive(Debug, ValueEnum, Clone)]
 pub enum Shell {
@@ -60,7 +60,6 @@ impl Shell {
             Shell::Fish => "cd".to_string(),
             Shell::Zsh => "builtin cd".to_string(),
         }
-
     }
 }
 
@@ -73,7 +72,12 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
 
     match config {
         Some(config) => {
-            let cd_command = config.config.unwrap_or(GlobalConfig { cd_command: shell.get_default_command()}).cd_command;
+            let cd_command = config
+                .config
+                .unwrap_or(GlobalConfig {
+                    cd_command: shell.get_default_command(),
+                })
+                .cd_command;
             shell_script = shell_script.replace("{{{cd_command}}}", cd_command.as_str());
         }
         _ => {
@@ -102,7 +106,8 @@ pub fn remove_shell(shell: Shell) -> Result<()> {
 
     if config.contains(&source_string) {
         config = config.replace(&source_string, "");
-        std::fs::write(&config_path, config).with_context(|| format!("Failed to write to {}", &config_path))?;
+        std::fs::write(&config_path, config)
+            .with_context(|| format!("Failed to write to {}", &config_path))?;
     }
 
     std::fs::remove_file(&shell_script_target).unwrap();

@@ -8,28 +8,6 @@ pub struct EnvVar {
     pub value: String,
 }
 
-// pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
-//     config
-//         .directories
-//         .iter()
-//         .find(|dir| {
-//             let path_to_check = Path::new(&dir.path);
-//             let path = Path::new(new_path);
-//             path.starts_with(path_to_check) || path_to_check == path
-//         })
-//         .unwrap_or(&EnvDirectory {
-//             path: String::from(""),
-//             vars: HashMap::new(),
-//         })
-//         .vars
-//         .iter()
-//         .map(|var| EnvVar {
-//             key: var.0.clone(),
-//             value: var.1.clone(),
-//         })
-//         .collect()
-// }
-
 pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
     config
         .directories

@@ -28,5 +28,5 @@ pub enum Commands {
     Remove {
         #[arg(value_name = "SHELL", required = true)]
         shell: Option<Shell>,
-    }
+    },
 }
