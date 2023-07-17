@@ -1,5 +1,7 @@
 # cdwe (change directory with env vars)
-A simple configurable cd wrapper that sets env vars per directory, based on a config file.
+A simple configurable cd wrapper that sets env vars per directory, based on a config file. \
+\
+Define environment variables per directory in a `~/cdwe.toml` file, and cdwe will set and uset environment variables corresponding dirs and subdirs.
 
 ![usage](./assets/usage.gif)
 
@@ -37,3 +39,36 @@ echo $IS_DEBUG
 cdwe ..
 echo $IS_DEBUG
 ```
+
+
+### What if I use something other than builtin cd?
+
+1. You can define a `cd_command` in the config section of the `~/cdwe.toml`.
+```toml
+[config]
+cd_command = "z" # if you are using zoxide
+
+#... rest of config
+```
+
+2. Run `cdwe-reload`
+```bash
+cdwe-reload # reloads your config
+
+zsh #reload your shell, use bash or fish if you use those.
+
+```
+
+### Uninstalling
+1. Run cdwe-remove to clean up all shell artifacts
+```bash
+cdwe-remove #removes the `source <output>` from your .zshrc/.bashrc/.fish
+
+zsh #reload your shell, use bash or fish if you use those.
+```
+
+2. Uninstall binary
+```bash
+cargo uninstall cdwe
+```
+
