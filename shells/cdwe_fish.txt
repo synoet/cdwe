@@ -9,3 +9,12 @@ function cdwe
   eval $result
 end
 
+function cdwe-remove
+  ({{{exec_path}}} remove fish)
+end
+
+function cdwe-reload
+  ({{{exec_path}}} reload fish)
+end
+
+

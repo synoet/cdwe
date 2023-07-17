@@ -21,4 +21,12 @@ pub enum Commands {
         #[arg(value_name = "SHELL", required = true)]
         shell: Option<Shell>,
     },
+    Reload {
+        #[arg(value_name = "SHELL", required = true)]
+        shell: Option<Shell>,
+    },
+    Remove {
+        #[arg(value_name = "SHELL", required = true)]
+        shell: Option<Shell>,
+    }
 }

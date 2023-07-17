@@ -9,3 +9,11 @@ function cdwe() {
   result="$({{{exec_path}}} run --old_dir="$old_dir" --new_dir="$new_dir")"
   eval "${result}"
 }
+
+function cdwe-reload () {
+  {{{exec_path}}} reload zsh
+}
+
+function cdwe-remove() {
+  {{{exec_path}}} remove zsh 
+}

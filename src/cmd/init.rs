@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, Context};
 use clap::ValueEnum;
 use super::super::config::{Config, GlobalConfig};
 
@@ -64,7 +64,7 @@ impl Shell {
     }
 }
 
-pub fn init_shell(config: Option<&Config>, shell: Shell) -> Result<()> {
+pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
     let config_path = shell.get_config_path();
     let mut shell_script = shell.get_shell_script();
 
@@ -91,5 +91,21 @@ pub fn init_shell(config: Option<&Config>, shell: Shell) -> Result<()> {
         config.push_str(&format!("\n{}", source_string));
         std::fs::write(&config_path, config).unwrap();
     }
+    Ok(())
+}
+
+pub fn remove_shell(shell: Shell) -> Result<()> {
+    let shell_script_target = shell.get_shell_script_target();
+    let config_path = shell.get_config_path();
+    let source_string = format!("source {}", &shell_script_target);
+    let mut config = std::fs::read_to_string(&config_path).unwrap();
+
+    if config.contains(&source_string) {
+        config = config.replace(&source_string, "");
+        std::fs::write(&config_path, config).with_context(|| format!("Failed to write to {}", &config_path))?;
+    }
+
+    std::fs::remove_file(&shell_script_target).unwrap();
+
     Ok(())
 }
