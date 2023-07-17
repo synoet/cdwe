@@ -1,5 +1,5 @@
 use super::super::config::{Config, EnvDirectory};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -33,19 +33,10 @@ pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
         .collect()
 }
 
-pub fn run(_config: &Config, old_path: String, new_path: String) -> Result<(), anyhow::Error> {
+pub fn run(config: &Config, old_path: String, new_path: String) -> Result<(), anyhow::Error> {
     if old_path == new_path {
         return Ok(());
     }
-
-    #[allow(deprecated)]
-    let home_dir = match std::env::home_dir() {
-        Some(path) => path,
-        None => return Err(anyhow!("Could not find home directory")),
-    };
-
-    let config =
-        Config::from_config_file(&format!("{}/{}", home_dir.to_str().unwrap(), "cdwe.toml"))?;
 
     let to_set = get_vars_to_set(&config, &new_path);
     let to_unset = get_vars_to_unset(&config, &old_path);
