@@ -1,12 +1,12 @@
 function cdwe() {
   local old_dir="$PWD"
 
-  builtin cd "$@" || return
+  {{{cd_command}}} "$@" || return
 
   local new_dir="$PWD"
 
   local result
-  result="$({{{exec_path}}} --old_dir="$old_dir" --new_dir="$new_dir")"
+  result="$({{{exec_path}}} run --old_dir="$old_dir" --new_dir="$new_dir")"
   eval "${result}"
 }
 

@@ -1,7 +1,7 @@
 function cdwe() {
   local old_dir="$PWD"
 
-  builtin cd "$@" || return
+  {{{cd_command}}} "$@" || return
 
   local new_dir="$PWD"
 

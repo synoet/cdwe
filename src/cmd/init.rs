@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::ValueEnum;
+use super::super::config::{Config, GlobalConfig};
 
 #[derive(Debug, ValueEnum, Clone)]
 pub enum Shell {
@@ -52,14 +53,33 @@ impl Shell {
                 .to_string(),
         }
     }
+
+    fn get_default_command(&self) -> String {
+        match self {
+            Shell::Bash => "builtin cd".to_string(),
+            Shell::Fish => "cd".to_string(),
+            Shell::Zsh => "builtin cd".to_string(),
+        }
+
+    }
 }
 
-pub fn init_shell(shell: Shell) -> Result<()> {
+pub fn init_shell(config: Option<&Config>, shell: Shell) -> Result<()> {
     let config_path = shell.get_config_path();
     let mut shell_script = shell.get_shell_script();
 
     let exe_path = std::env::current_exe().unwrap();
     shell_script = shell_script.replace("{{{exec_path}}}", exe_path.to_str().unwrap());
+
+    match config {
+        Some(config) => {
+            let cd_command = config.config.unwrap_or(GlobalConfig { cd_command: shell.get_default_command()}).cd_command;
+            shell_script = shell_script.replace("{{{cd_command}}}", cd_command.as_str());
+        }
+        _ => {
+            shell_script = shell_script.replace("{{{cd_command}}}", &shell.get_default_command());
+        }
+    }
 
     let shell_script_target = shell.get_shell_script_target();
     std::fs::write(&shell_script_target, shell_script).unwrap();

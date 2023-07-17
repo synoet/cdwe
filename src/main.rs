@@ -10,7 +10,7 @@ fn main() -> Result<()> {
 
     match matches.command {
         cmd::Commands::Init { shell } => {
-            init_shell(shell.unwrap())?;
+            init_shell(None, shell.unwrap())?;
         }
         cmd::Commands::Run { old_dir, new_dir } => {
             let config = Config::from_config_file(&format!(

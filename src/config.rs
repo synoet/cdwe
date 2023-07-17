@@ -6,6 +6,12 @@ use std::collections::HashMap;
 pub struct Config {
     #[serde(rename = "directory")]
     pub directories: Vec<EnvDirectory>,
+    pub config: Option<GlobalConfig>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GlobalConfig {
+    pub cd_command: String,
 }
 
 #[derive(Deserialize, Debug)]
