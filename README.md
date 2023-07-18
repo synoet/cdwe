@@ -1,11 +1,24 @@
-# cdwe (change directory with env vars)
-A simple configurable cd wrapper that sets env vars per directory, based on a config file. \
-\
-Define environment variables per directory in a `~/cdwe.toml` file, and cdwe will set and uset environment variables corresponding dirs and subdirs.
+<div align="center">
+
+# cdwe (cd with env vars)
+A simple configurable cd wrapper that sets env vars per directory, based on a config file.
+
+Define environment variables per directory in a `~/cdwe.toml` file, and cdwe will set and uset environment variables in corresponding directories and subdirectories. \
+
+[Installation](#installation) •
+[Configuration](#configuration) •
+[Uninstalling](#uninstalling)
+</div>
+
+ 
+
 
 ![usage](./assets/usage.gif)
 
 ## Installation
+
+:warning: Behavior on bash/fish was not thoroughly tested. If you encounter any issues please create an issue.
+
 1. **Install binary**
 ```bash
 cargo install cdwe
@@ -41,7 +54,8 @@ echo $IS_DEBUG
 ```
 
 
-### What if I use something other than builtin cd?
+## Configuration 
+#### What if I use something other than builtin cd?
 
 1. You can define a `cd_command` in the config section of the `~/cdwe.toml`.
 ```toml
@@ -59,7 +73,7 @@ zsh #reload your shell, use bash or fish if you use those.
 
 ```
 
-### Uninstalling
+## Uninstalling
 1. Run cdwe-remove to clean up all shell artifacts
 ```bash
 cdwe-remove #removes the `source <output>` from your .zshrc/.bashrc/.fish
