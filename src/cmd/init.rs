@@ -1,4 +1,5 @@
 use super::super::config::{Config, GlobalConfig};
+use std::path::Path;
 use anyhow::{Context, Result};
 use clap::ValueEnum;
 
@@ -11,19 +12,20 @@ pub enum Shell {
 
 impl Shell {
     fn get_config_path(&self) -> Result<String> {
-        let home = std::env::home_dir().context("failed to get home directory")?;
+        let home_var = std::env::var("HOME").context("no $HOME set")?;
+        let home = Path::new(&home_var);
         match self {
-            Shell::Bash => Ok(std::path::Path::join(home.as_path(), ".bashrc")
+            Shell::Bash => Ok(std::path::Path::join(home, ".bashrc")
                 .to_str()
                 .context("failed to get bash config path")?
                 .to_string()),
             Shell::Fish => Ok(
-                std::path::Path::join(home.as_path(), "/config/fish/config.fish")
+                std::path::Path::join(home, "/config/fish/config.fish")
                     .to_str()
                     .context("failed to get fish config path")?
                     .to_string(),
             ),
-            Shell::Zsh => Ok(std::path::Path::join(home.as_path(), ".zshrc")
+            Shell::Zsh => Ok(std::path::Path::join(home, ".zshrc")
                 .to_str()
                 .context("failed to get zsh config path")?
                 .to_string()),
@@ -39,17 +41,18 @@ impl Shell {
     }
 
     fn get_shell_script_target(&self) -> Result<String> {
-        let home = std::env::home_dir().context("failed to get home directory")?;
+        let home_var = std::env::var("HOME").context("no $HOME set")?;
+        let home = Path::new(&home_var);
         match self {
-            Shell::Bash => Ok(std::path::Path::join(home.as_path(), ".cdwe.bash")
+            Shell::Bash => Ok(std::path::Path::join(home, ".cdwe.bash")
                 .to_str()
                 .context("failed to get bash target")?
                 .to_string()),
-            Shell::Fish => Ok(std::path::Path::join(home.as_path(), ".cdwe.fish")
+            Shell::Fish => Ok(std::path::Path::join(home, ".cdwe.fish")
                 .to_str()
                 .context("failed to get fish target")?
                 .to_string()),
-            Shell::Zsh => Ok(std::path::Path::join(home.as_path(), ".cdwe.zsh")
+            Shell::Zsh => Ok(std::path::Path::join(home, ".cdwe.zsh")
                 .to_str()
                 .context("failed to get zsh target")?
                 .to_string()),
