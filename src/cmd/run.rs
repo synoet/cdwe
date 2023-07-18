@@ -11,8 +11,9 @@ pub struct EnvVar {
 pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
     config
         .directories
-        .iter()
-        .filter(|dir| {
+        .clone()
+        .into_iter()
+        .filter(move |dir| {
             let path_to_check = Path::new(&dir.path);
             let path = Path::new(new_path);
             path.starts_with(path_to_check) || path_to_check == path

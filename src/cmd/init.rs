@@ -10,21 +10,23 @@ pub enum Shell {
 }
 
 impl Shell {
-    fn get_config_path(&self) -> String {
-        let home = std::env::home_dir().unwrap();
+    fn get_config_path(&self) -> Result<String> {
+        let home = std::env::home_dir().context("failed to get home directory")?;
         match self {
-            Shell::Bash => std::path::Path::join(home.as_path(), ".bashrc")
+            Shell::Bash => Ok(std::path::Path::join(home.as_path(), ".bashrc")
                 .to_str()
-                .unwrap()
-                .to_string(),
-            Shell::Fish => std::path::Path::join(home.as_path(), "/config/fish/config.fish")
+                .context("failed to get bash config path")?
+                .to_string()),
+            Shell::Fish => Ok(
+                std::path::Path::join(home.as_path(), "/config/fish/config.fish")
+                    .to_str()
+                    .context("failed to get fish config path")?
+                    .to_string(),
+            ),
+            Shell::Zsh => Ok(std::path::Path::join(home.as_path(), ".zshrc")
                 .to_str()
-                .unwrap()
-                .to_string(),
-            Shell::Zsh => std::path::Path::join(home.as_path(), ".zshrc")
-                .to_str()
-                .unwrap()
-                .to_string(),
+                .context("failed to get zsh config path")?
+                .to_string()),
         }
     }
 
@@ -36,21 +38,21 @@ impl Shell {
         }
     }
 
-    fn get_shell_script_target(&self) -> String {
-        let home = std::env::home_dir().unwrap();
+    fn get_shell_script_target(&self) -> Result<String> {
+        let home = std::env::home_dir().context("failed to get home directory")?;
         match self {
-            Shell::Bash => std::path::Path::join(home.as_path(), ".cdwe.sh")
+            Shell::Bash => Ok(std::path::Path::join(home.as_path(), ".cdwe.bash")
                 .to_str()
-                .unwrap()
-                .to_string(),
-            Shell::Fish => std::path::Path::join(home.as_path(), ".cdwe.fish")
+                .context("failed to get bash target")?
+                .to_string()),
+            Shell::Fish => Ok(std::path::Path::join(home.as_path(), ".cdwe.fish")
                 .to_str()
-                .unwrap()
-                .to_string(),
-            Shell::Zsh => std::path::Path::join(home.as_path(), ".cdwe.zsh")
+                .context("failed to get fish target")?
+                .to_string()),
+            Shell::Zsh => Ok(std::path::Path::join(home.as_path(), ".cdwe.zsh")
                 .to_str()
-                .unwrap()
-                .to_string(),
+                .context("failed to get zsh target")?
+                .to_string()),
         }
     }
 
@@ -64,11 +66,16 @@ impl Shell {
 }
 
 pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
-    let config_path = shell.get_config_path();
+    let config_path = shell.get_config_path()?;
     let mut shell_script = shell.get_shell_script();
-
-    let exe_path = std::env::current_exe().unwrap();
-    shell_script = shell_script.replace("{{{exec_path}}}", exe_path.to_str().unwrap());
+    let shell_script_target = shell.get_shell_script_target()?;
+    let exe_path = std::env::current_exe().context("failed to get cdwe executable path")?;
+    shell_script = shell_script.replace(
+        "{{{exec_path}}}",
+        exe_path
+            .to_str()
+            .context("failed to convert path to string")?,
+    );
 
     match config {
         Some(config) => {
@@ -85,24 +92,26 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
         }
     }
 
-    let shell_script_target = shell.get_shell_script_target();
-    std::fs::write(&shell_script_target, shell_script).unwrap();
+    std::fs::write(&shell_script_target, shell_script)?;
 
     let source_string = format!("source {}", &shell_script_target);
 
-    let mut config = std::fs::read_to_string(&config_path).unwrap();
+    let mut config = std::fs::read_to_string(&config_path)
+        .with_context(|| format!("failed to read config path {}", config_path))?;
     if !config.contains(&source_string) {
         config.push_str(&format!("\n{}", source_string));
-        std::fs::write(&config_path, config).unwrap();
+        std::fs::write(&config_path, config)
+            .with_context(|| format!("failed to write to config path {}", config_path))?;
     }
     Ok(())
 }
 
 pub fn remove_shell(shell: Shell) -> Result<()> {
-    let shell_script_target = shell.get_shell_script_target();
-    let config_path = shell.get_config_path();
+    let shell_script_target = shell.get_shell_script_target()?;
+    let config_path = shell.get_config_path()?;
     let source_string = format!("source {}", &shell_script_target);
-    let mut config = std::fs::read_to_string(&config_path).unwrap();
+    let mut config = std::fs::read_to_string(&config_path)
+        .with_context(|| format!("failed to read config path {}", config_path))?;
 
     if config.contains(&source_string) {
         config = config.replace(&source_string, "");
@@ -110,7 +119,8 @@ pub fn remove_shell(shell: Shell) -> Result<()> {
             .with_context(|| format!("Failed to write to {}", &config_path))?;
     }
 
-    std::fs::remove_file(&shell_script_target).unwrap();
+    std::fs::remove_file(&shell_script_target)
+        .with_context(|| format!("failed to remove config file {}", &shell_script_target))?;
 
     Ok(())
 }

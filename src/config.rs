@@ -14,7 +14,7 @@ pub struct GlobalConfig {
     pub cd_command: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EnvDirectory {
     pub path: String,
     pub vars: HashMap<String, String>,
