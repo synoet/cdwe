@@ -38,10 +38,6 @@ pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
 }
 
 pub fn run(config: &Config, old_path: String, new_path: String) -> Result<(), anyhow::Error> {
-    if old_path == new_path {
-        return Ok(());
-    }
-
     let to_set = get_vars_to_set(&config, &new_path);
     let to_unset = get_vars_to_unset(&config, &old_path);
 

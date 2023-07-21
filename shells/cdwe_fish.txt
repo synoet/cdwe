@@ -9,6 +9,14 @@ function cdwe
   eval $result
 end
 
+function cdwe_on_load
+    set current_dir (pwd)
+    set result ({{{exec_path}}} run --old_dir="$current_dir" --new_dir="$current_dir")
+    eval $result
+end
+
+cdwe_on_load
+
 function cdwe-remove
   ({{{exec_path}}} remove fish)
 end

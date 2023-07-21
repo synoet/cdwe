@@ -10,6 +10,13 @@ function cdwe() {
   eval "${result}"
 }
 
+cdwe_on_load() {
+    current_dir="$PWD"
+    result="$({{{exec_path}}} run --old_dir="$current_dir" --new_dir="$current_dir")"
+    eval "${result}"
+}
+cdwe_on_load
+
 function cdwe-reload () {
   {{{exec_path}}} reload bash
 }

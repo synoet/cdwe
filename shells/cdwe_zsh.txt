@@ -1,3 +1,6 @@
+exec {{{exec_path}}} run --old_dir="$PWD" --new_dir="$PWD"
+
+
 function cdwe() {
   local old_dir="$PWD"
 
@@ -10,6 +13,13 @@ function cdwe() {
   eval "${result}"
 }
 
+_cdwe_on_load() {
+    current_dir="$PWD"
+    result="$({{{exec_path}}} run --old_dir="$current_dir" --new_dir="$current_dir")"
+    eval "${result}"
+}
+_cdwe_on_load
+
 function cdwe-reload () {
   {{{exec_path}}} reload zsh
 }
@@ -17,3 +27,5 @@ function cdwe-reload () {
 function cdwe-remove() {
   {{{exec_path}}} remove zsh 
 }
+
+
