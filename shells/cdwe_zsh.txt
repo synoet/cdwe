@@ -1,6 +1,3 @@
-exec {{{exec_path}}} run --old_dir="$PWD" --new_dir="$PWD"
-
-
 function cdwe() {
   local old_dir="$PWD"
 
