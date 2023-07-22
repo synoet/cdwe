@@ -95,7 +95,10 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
 
     std::fs::write(&shell_script_target, shell_script)?;
 
-    let source_string = format!("if [ -f '{}' ]; then . '{}'; fi", &shell_script_target, &shell_script_target);
+    let source_string = format!(
+        "if [ -f '{}' ]; then . '{}'; fi",
+        &shell_script_target, &shell_script_target
+    );
 
     let mut config = std::fs::read_to_string(&config_path)
         .with_context(|| format!("failed to read config path {}", config_path))?;
@@ -110,7 +113,10 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
 pub fn remove_shell(shell: Shell) -> Result<()> {
     let shell_script_target = shell.get_shell_script_target()?;
     let config_path = shell.get_config_path()?;
-    let source_string = format!("if [ -f '{}' ]; then . '{}'; fi", &shell_script_target, &shell_script_target);
+    let source_string = format!(
+        "if [ -f '{}' ]; then . '{}'; fi",
+        &shell_script_target, &shell_script_target
+    );
     let mut config = std::fs::read_to_string(&config_path)
         .with_context(|| format!("failed to read config path {}", config_path))?;
 
