@@ -1,5 +1,6 @@
 use super::super::config::Config;
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
+use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -8,8 +9,20 @@ pub struct EnvVar {
     pub value: String,
 }
 
-pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
-    config
+fn trim_quotes(s: &str) -> String {
+    if s.len() < 2 {
+        return s.to_string();
+    }
+    let mut chars = s.chars();
+    match (chars.next(), chars.next_back()) {
+        (Some('"'), Some('"')) => chars.collect(),
+        (Some('\''), Some('\'')) => chars.collect(),
+        _ => s.to_string(),
+    }
+}
+
+pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
+    let dir_vars = config
         .directories
         .clone()
         .into_iter()
@@ -20,6 +33,7 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
         })
         .flat_map(|dir| {
             dir.vars
+                .unwrap_or(HashMap::new())
                 .iter()
                 .map(|var| EnvVar {
                     key: var.0.clone(),
@@ -27,18 +41,63 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Vec<EnvVar> {
                 })
                 .collect::<Vec<EnvVar>>()
         })
-        .collect()
+        .collect();
+
+    let mut file_vars: Vec<EnvVar> = vec![];
+
+    for dir in config.directories.clone().into_iter() {
+        let base_path = Path::new(&dir.path);
+        let path = Path::new(new_path);
+        if !path.starts_with(base_path) || base_path != path {
+            continue;
+        }
+        for file in dir.load_from.unwrap_or(vec![]) {
+            let file_path = base_path.join(Path::new(&file));
+            let content = std::fs::read_to_string(file_path)
+                .with_context(|| format!("Failed to read file: {}", file))?;
+
+            let lines = content.lines();
+
+            let mut vars = vec![];
+
+            for (index, line) in lines.enumerate() {
+                let mut split = line.split('=');
+                if split.clone().count() != 2 {
+                    return Err(anyhow!(
+                        "Invalid line in file: {}:{}: {}",
+                        file,
+                        index,
+                        line
+                    ));
+                }
+
+                let key = trim_quotes(split.next().unwrap());
+                let value = trim_quotes(split.next().unwrap());
+
+                vars.push(EnvVar {
+                    key: key.to_string(),
+                    value: value.to_string(),
+                });
+            }
+            file_vars.extend(vars);
+        }
+    }
+
+    let mut vars: Vec<EnvVar> = dir_vars;
+    vars.extend(file_vars);
+    Ok(vars)
 }
 
 pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
     get_vars_to_set(config, old_path)
+        .unwrap_or(vec![])
         .iter()
         .map(|var| var.key.clone())
         .collect()
 }
 
-pub fn run(config: &Config, old_path: String, new_path: String) -> Result<(), anyhow::Error> {
-    let to_set = get_vars_to_set(&config, &new_path);
+pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
+    let to_set = get_vars_to_set(&config, &new_path)?;
     let to_unset = get_vars_to_unset(&config, &old_path);
 
     for var in to_unset {

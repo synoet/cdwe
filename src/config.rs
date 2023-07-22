@@ -17,7 +17,8 @@ pub struct GlobalConfig {
 #[derive(Deserialize, Debug, Clone)]
 pub struct EnvDirectory {
     pub path: String,
-    pub vars: HashMap<String, String>,
+    pub vars: Option<HashMap<String, String>>,
+    pub load_from: Option<Vec<String>>,
 }
 
 impl Config {

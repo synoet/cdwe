@@ -1,7 +1,7 @@
 use super::super::config::{Config, GlobalConfig};
-use std::path::Path;
 use anyhow::{Context, Result};
 use clap::ValueEnum;
+use std::path::Path;
 
 #[derive(Debug, ValueEnum, Clone)]
 pub enum Shell {
@@ -19,12 +19,10 @@ impl Shell {
                 .to_str()
                 .context("failed to get bash config path")?
                 .to_string()),
-            Shell::Fish => Ok(
-                std::path::Path::join(home, "/config/fish/config.fish")
-                    .to_str()
-                    .context("failed to get fish config path")?
-                    .to_string(),
-            ),
+            Shell::Fish => Ok(std::path::Path::join(home, "/config/fish/config.fish")
+                .to_str()
+                .context("failed to get fish config path")?
+                .to_string()),
             Shell::Zsh => Ok(std::path::Path::join(home, ".zshrc")
                 .to_str()
                 .context("failed to get zsh config path")?
