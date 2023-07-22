@@ -110,3 +110,16 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_trim_quotes() {
+        use super::trim_quotes;
+        assert_eq!(trim_quotes("\"test\""), "test");
+        assert_eq!(trim_quotes("'test'"), "test");
+        assert_eq!(trim_quotes("test"), "test");
+        assert_eq!(trim_quotes("\"test"), "\"test");
+        assert_eq!(trim_quotes("test'"), "test'");
+    }
+}
