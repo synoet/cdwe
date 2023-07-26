@@ -96,6 +96,26 @@ pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
         .collect()
 }
 
+pub fn get_commands_to_run(config: &Config, new_path: &str) -> Vec<String> {
+    config
+        .directories
+        .clone()
+        .into_iter()
+        .filter(move |dir| {
+            let path_to_check = Path::new(&dir.path);
+            let path = Path::new(new_path);
+            path.starts_with(path_to_check) || path_to_check == path
+        })
+        .flat_map(|dir| {
+            dir.run
+                .unwrap_or(vec![])
+                .iter()
+                .map(|cmd| cmd.clone())
+                .collect::<Vec<String>>()
+        })
+        .collect::<Vec<String>>()
+}
+
 pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     let to_set = get_vars_to_set(&config, &new_path)?;
     let to_unset = get_vars_to_unset(&config, &old_path);
@@ -106,6 +126,12 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
 
     for var in to_set {
         println!("export {}=\"{}\"", var.key, var.value);
+    }
+
+    let commands = get_commands_to_run(&config, &new_path);
+
+    for cmd in commands {
+        println!("{}", cmd);
     }
 
     Ok(())

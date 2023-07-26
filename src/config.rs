@@ -19,6 +19,7 @@ pub struct EnvDirectory {
     pub path: String,
     pub vars: Option<HashMap<String, String>>,
     pub load_from: Option<Vec<String>>,
+    pub run: Option<Vec<String>>,
 }
 
 impl Config {
