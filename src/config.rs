@@ -7,6 +7,9 @@ pub struct Config {
     #[serde(rename = "directory")]
     pub directories: Vec<EnvDirectory>,
     pub config: Option<GlobalConfig>,
+    pub variables: Option<Vec<EnvVariable>>,
+    pub commands: Option<Vec<EnvCommand>>,
+    pub files: Option<Vec<EnvFile>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -20,6 +23,25 @@ pub struct EnvDirectory {
     pub vars: Option<HashMap<String, String>>,
     pub load_from: Option<Vec<String>>,
     pub run: Option<Vec<String>>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct EnvVariable {
+    pub name: String,
+    pub value: String,
+    pub paths: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct EnvCommand {
+    pub run: String,
+    pub paths: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct EnvFile {
+    pub load_from: String,
+    pub paths: Vec<String>,
 }
 
 impl Config {
