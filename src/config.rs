@@ -23,6 +23,13 @@ pub struct EnvDirectory {
     pub vars: Option<HashMap<String, String>>,
     pub load_from: Option<Vec<String>>,
     pub run: Option<Vec<String>>,
+    pub aliases: Option<Vec<EnvAlias>>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct EnvAlias {
+    pub name: String,
+    pub commands: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
