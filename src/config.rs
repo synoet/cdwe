@@ -4,12 +4,17 @@ use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    pub config: Option<GlobalConfig>,
     #[serde(rename = "directory")]
     pub directories: Vec<EnvDirectory>,
-    pub config: Option<GlobalConfig>,
+    #[serde(rename = "env_variable")]
     pub variables: Option<Vec<EnvVariable>>,
+    #[serde(rename = "command")]
     pub commands: Option<Vec<EnvCommand>>,
+    #[serde(rename = "env_file")]
     pub files: Option<Vec<EnvFile>>,
+    #[serde(rename = "alias")]
+    pub aliases: Option<Vec<DirectoryEnvAlias>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -33,10 +38,17 @@ pub struct EnvAlias {
 }
 
 #[derive(Deserialize, Debug, Clone)]
+pub struct DirectoryEnvAlias {
+    pub name: String,
+    pub commands: Vec<String>,
+    pub paths: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct EnvVariable {
     pub name: String,
     pub value: String,
-    pub paths: Vec<String>,
+    pub dirs: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -48,7 +60,7 @@ pub struct EnvCommand {
 #[derive(Deserialize, Debug, Clone)]
 pub struct EnvFile {
     pub load_from: String,
-    pub paths: Vec<String>,
+    pub directories: Vec<String>,
 }
 
 impl Config {
