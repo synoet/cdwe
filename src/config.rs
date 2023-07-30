@@ -60,7 +60,7 @@ pub struct EnvCommand {
 #[derive(Deserialize, Debug, Clone)]
 pub struct EnvFile {
     pub load_from: String,
-    pub directories: Vec<String>,
+    pub dirs: Vec<String>,
 }
 
 impl Config {

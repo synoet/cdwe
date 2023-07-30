@@ -61,7 +61,7 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
             let content = std::fs::read_to_string(file_path)
                 .with_context(|| format!("Failed to read file: {}", file))?;
 
-            let lines = content.lines();
+            let lines = content.lines().filter(|line| !line.starts_with('#'));
 
             let mut vars = vec![];
 
@@ -111,18 +111,24 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
 
     let mut ext_file_vars: Vec<EnvVar> = vec![];
 
-    for env_file in config.files.clone().unwrap_or(vec![]).into_iter() {
-        let base_path = Path::new(&env_file.load_from);
-        let path = Path::new(new_path);
-        if !path.starts_with(base_path) || base_path != path {
-            continue;
-        }
+    let matched_files = config.files.clone().unwrap_or(vec![]).into_iter()
+        .filter(|file| {
+            file.dirs.iter().any(|path| {
+                let base_path = Path::new(path);
+                let path = Path::new(new_path);
+                path.starts_with(base_path) || base_path == path
+            })
+        });
+
+    for env_file in matched_files {
+        let base_path = Path::new(new_path);
+        let path = Path::new(&env_file.load_from);
 
         let file_path = base_path.join(Path::new(&path));
         let content = std::fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read file: {}", env_file.load_from))?;
 
-        let lines = content.lines();
+        let lines = content.lines().filter(|line| !line.starts_with('#'));
 
         let mut vars = vec![];
 
