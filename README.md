@@ -163,13 +163,11 @@ In this case every time we enter `/Users/synoet/dev/project` cdwe will automatic
 ```toml
 [[command]]
 run = "git fetch -p"
-paths = [
+dirs = [
   "/Users/synoet/dev/cdwe",
   "/Users/synoet/dev/macro/macro-api"
 ]
 ```
-
-
 
 ## Configuration 
 #### Setting directory environment variables
