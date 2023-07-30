@@ -6,7 +6,6 @@ A simple configurable cd wrapper that provides powerful utilities for customizin
 
 
 [Installation](#installation) •
-[Usage](#usage) •
 [Configuration](#configuration) •
 [Uninstalling](#uninstalling)
 </div>
@@ -134,39 +133,7 @@ Here we define a `build` alias which will live only in `/User/synoet/dev/project
 [[alias]]
 name = "build"
 commands = ["yarn cache clean", "yarn build", "yarn package"]
-dirs = [
-    "/Users/synoet/dev/projecta",
-    "/Users/synoet/dev/projectb"
-]
-```
-Here you are defining the same alias for multiple directories.
 
-#### Defining Auto Commands
----
-Here we can define commands that will automatically run anytime we cd into a specific directory
-```toml
-[[directory]]
-path = "/Users/synoet/dev/project"
-vars = {"IS_DEBUG" = "true", "IS_PROD" = "false"}
-load_from = [".env"]
-aliases = [
-    { name = "build", commands = ["yarn cache clean", "yarn build", "yarn package" }
-]
-run = ["git fetch -p", "ls"]
-```
-In this case every time we enter `/Users/synoet/dev/project` cdwe will automatically run `git fetch -p` and `ls`
-
-*Auto Commands also require an exact match and don't propogate to subdirectories*
-
-**OR**
-
-```toml
-[[command]]
-run = "git fetch -p"
-paths = [
-  "/Users/synoet/dev/cdwe",
-  "/Users/synoet/dev/macro/macro-api"
-]
 ```
 
 
