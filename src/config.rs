@@ -54,7 +54,7 @@ pub struct EnvVariable {
 #[derive(Deserialize, Debug, Clone)]
 pub struct EnvCommand {
     pub run: String,
-    pub paths: Vec<String>,
+    pub dirs: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

@@ -203,7 +203,7 @@ pub fn get_commands_to_run(config: &Config, new_path: &str) -> Vec<String> {
             .unwrap_or(vec![])
             .into_iter()
             .filter(|cmd| {
-                cmd.paths.iter().any(|path| {
+                cmd.dirs.iter().any(|path| {
                     let base_path = Path::new(path);
                     let path = Path::new(new_path);
                     path.starts_with(base_path) || base_path == path
