@@ -121,7 +121,7 @@ path = "/Users/synoet/dev/project"
 vars = {"IS_DEBUG" = "true", "IS_PROD" = "false"}
 load_from = [".env"]
 aliases = [
-    { name = "build", commands = ["yarn cache clean", "yarn build", "yarn package" }
+    { name = "build", commands = ["yarn cache clean", "yarn build", "yarn package"] }
 ]
 ```
 
@@ -150,7 +150,7 @@ path = "/Users/synoet/dev/project"
 vars = {"IS_DEBUG" = "true", "IS_PROD" = "false"}
 load_from = [".env"]
 aliases = [
-    { name = "build", commands = ["yarn cache clean", "yarn build", "yarn package" }
+    { name = "build", commands = ["yarn cache clean", "yarn build", "yarn package"] }
 ]
 run = ["git fetch -p", "ls"]
 ```
