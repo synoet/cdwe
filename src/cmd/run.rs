@@ -111,7 +111,11 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
 
     let mut ext_file_vars: Vec<EnvVar> = vec![];
 
-    let matched_files = config.files.clone().unwrap_or(vec![]).into_iter()
+    let matched_files = config
+        .files
+        .clone()
+        .unwrap_or(vec![])
+        .into_iter()
         .filter(|file| {
             file.dirs.iter().any(|path| {
                 let base_path = Path::new(path);
