@@ -61,23 +61,21 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
             let content = std::fs::read_to_string(file_path)
                 .with_context(|| format!("Failed to read file: {}", file))?;
 
-            let lines = content.lines().filter(|line| !line.starts_with('#'));
+            let lines = content.lines().filter(|line| !line.contains('#') && !line.is_empty());
+
 
             let mut vars = vec![];
 
             for (index, line) in lines.enumerate() {
-                let mut split = line.split('=');
-                if split.clone().count() != 2 {
-                    return Err(anyhow!(
-                        "Invalid line in file: {}:{}: {}",
-                        file,
-                        index,
-                        line
-                    ));
-                }
+                let split = line.split_once('=').ok_or_else(|| anyhow!(
+                    "Invalid line in file: {}:{}: {}",
+                    file,
+                    index,
+                    line
+                ))?;
 
-                let key = trim_quotes(split.next().unwrap());
-                let value = trim_quotes(split.next().unwrap());
+                let key = trim_quotes(split.0);
+                let value = trim_quotes(split.1);
 
                 vars.push(EnvVar {
                     key: key.to_string(),
@@ -131,24 +129,22 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
         let file_path = base_path.join(Path::new(&path));
         let content = std::fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read file: {}", env_file.load_from))?;
-
-        let lines = content.lines().filter(|line| !line.starts_with('#'));
+        
+        let lines = content.lines()
+            .filter(|line| !line.contains('#') && !line.is_empty());
 
         let mut vars = vec![];
 
         for (index, line) in lines.enumerate() {
-            let mut split = line.split('=');
-            if split.clone().count() != 2 {
-                return Err(anyhow!(
-                    "Invalid line in file: {}:{}: {}",
-                    env_file.load_from,
-                    index,
-                    line
-                ));
-            }
+            let split = line.split_once('=').ok_or_else(|| anyhow!(
+                "Invalid line in file: {}:{}: {}",
+                env_file.load_from,
+                index,
+                line
+            ))?;
 
-            let key = trim_quotes(split.next().unwrap());
-            let value = trim_quotes(split.next().unwrap());
+            let key = trim_quotes(split.0);
+            let value = trim_quotes(split.1);
 
             vars.push(EnvVar {
                 key: key.to_string(),
