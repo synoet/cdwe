@@ -3,7 +3,7 @@ use anyhow::{anyhow, Context, Result};
 use std::collections::HashMap;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct EnvVar {
     pub key: String,
     pub value: String,
@@ -19,6 +19,30 @@ fn trim_quotes(s: &str) -> String {
         (Some('\''), Some('\'')) => chars.collect(),
         _ => s.to_string(),
     }
+}
+
+fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVar>> {
+    let lines = content
+        .lines()
+        .filter(|line| !line.contains('#') && !line.trim().is_empty());
+
+    let mut vars = vec![];
+
+    for (index, line) in lines.enumerate() {
+        let split = line
+            .split_once('=')
+            .ok_or_else(|| anyhow!("Invalid line in file: {}:{}: {}", file_name, index, line))?;
+
+        let key = trim_quotes(split.0);
+        let value = trim_quotes(split.1);
+
+        vars.push(EnvVar {
+            key: key.to_string(),
+            value: value.to_string(),
+        });
+    }
+
+    Ok(vars)
 }
 
 pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
@@ -61,26 +85,7 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
             let content = std::fs::read_to_string(file_path)
                 .with_context(|| format!("Failed to read file: {}", file))?;
 
-            let lines = content
-                .lines()
-                .filter(|line| !line.contains('#') && !line.is_empty());
-
-            let mut vars = vec![];
-
-            for (index, line) in lines.enumerate() {
-                let split = line
-                    .split_once('=')
-                    .ok_or_else(|| anyhow!("Invalid line in file: {}:{}: {}", file, index, line))?;
-
-                let key = trim_quotes(split.0);
-                let value = trim_quotes(split.1);
-
-                vars.push(EnvVar {
-                    key: key.to_string(),
-                    value: value.to_string(),
-                });
-            }
-            file_vars.extend(vars);
+            file_vars.extend(parse_env_file(&content, &file.to_string())?);
         }
     }
 
@@ -128,32 +133,7 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
         let content = std::fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read file: {}", env_file.load_from))?;
 
-        let lines = content
-            .lines()
-            .filter(|line| !line.contains('#') && !line.is_empty());
-
-        let mut vars = vec![];
-
-        for (index, line) in lines.enumerate() {
-            let split = line.split_once('=').ok_or_else(|| {
-                anyhow!(
-                    "Invalid line in file: {}:{}: {}",
-                    env_file.load_from,
-                    index,
-                    line
-                )
-            })?;
-
-            let key = trim_quotes(split.0);
-            let value = trim_quotes(split.1);
-
-            vars.push(EnvVar {
-                key: key.to_string(),
-                value: value.to_string(),
-            });
-        }
-
-        ext_file_vars.extend(vars);
+        ext_file_vars.extend(parse_env_file(&content, &env_file.load_from)?);
     }
 
     variables.extend(file_vars);
@@ -348,5 +328,46 @@ mod tests {
         assert_eq!(trim_quotes("test"), "test");
         assert_eq!(trim_quotes("\"test"), "\"test");
         assert_eq!(trim_quotes("test'"), "test'");
+    }
+
+    #[test]
+    fn test_parse_env_file() {
+        use super::parse_env_file;
+        use super::EnvVar;
+
+        let test_content = "\
+            # THIS IS A TEST COMMMENT\n\
+            TEST_VAR=true\n\
+            ANOTHER_VAR=123\n\
+            QUOTED_VAR=\"test\"\n\
+            # ANOTHER TEST COMMENT\n\
+            SINGLE_QUOTED_VAR='test'\n\
+            ANOTHER_VAR=hello world this is a test\n\
+        ";
+
+        let expected: Vec<EnvVar> = vec![
+            EnvVar {
+                key: "TEST_VAR".to_string(),
+                value: "true".to_string(),
+            },
+            EnvVar {
+                key: "ANOTHER_VAR".to_string(),
+                value: "123".to_string(),
+            },
+            EnvVar {
+                key: "QUOTED_VAR".to_string(),
+                value: "test".to_string(),
+            },
+            EnvVar {
+                key: "SINGLE_QUOTED_VAR".to_string(),
+                value: "test".to_string(),
+            },
+            EnvVar {
+                key: "ANOTHER_VAR".to_string(),
+                value: "hello world this is a test".to_string(),
+            },
+        ];
+
+        assert_eq!(parse_env_file(test_content, "/.env").unwrap(), expected);
     }
 }
