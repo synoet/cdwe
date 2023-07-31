@@ -61,18 +61,16 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
             let content = std::fs::read_to_string(file_path)
                 .with_context(|| format!("Failed to read file: {}", file))?;
 
-            let lines = content.lines().filter(|line| !line.contains('#') && !line.is_empty());
-
+            let lines = content
+                .lines()
+                .filter(|line| !line.contains('#') && !line.is_empty());
 
             let mut vars = vec![];
 
             for (index, line) in lines.enumerate() {
-                let split = line.split_once('=').ok_or_else(|| anyhow!(
-                    "Invalid line in file: {}:{}: {}",
-                    file,
-                    index,
-                    line
-                ))?;
+                let split = line
+                    .split_once('=')
+                    .ok_or_else(|| anyhow!("Invalid line in file: {}:{}: {}", file, index, line))?;
 
                 let key = trim_quotes(split.0);
                 let value = trim_quotes(split.1);
@@ -129,19 +127,22 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
         let file_path = base_path.join(Path::new(&path));
         let content = std::fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read file: {}", env_file.load_from))?;
-        
-        let lines = content.lines()
+
+        let lines = content
+            .lines()
             .filter(|line| !line.contains('#') && !line.is_empty());
 
         let mut vars = vec![];
 
         for (index, line) in lines.enumerate() {
-            let split = line.split_once('=').ok_or_else(|| anyhow!(
-                "Invalid line in file: {}:{}: {}",
-                env_file.load_from,
-                index,
-                line
-            ))?;
+            let split = line.split_once('=').ok_or_else(|| {
+                anyhow!(
+                    "Invalid line in file: {}:{}: {}",
+                    env_file.load_from,
+                    index,
+                    line
+                )
+            })?;
 
             let key = trim_quotes(split.0);
             let value = trim_quotes(split.1);
@@ -202,7 +203,8 @@ pub fn get_commands_to_run(config: &Config, new_path: &str) -> Vec<String> {
                 cmd.dirs.iter().any(|path| {
                     let base_path = Path::new(path);
                     let path = Path::new(new_path);
-                    path.starts_with(base_path) || base_path == path
+                    // only exact match
+                    base_path == path
                 })
             })
             .map(|cmd| cmd.run)
@@ -261,11 +263,27 @@ pub fn get_aliases_to_unset(config: &Config, old_path: &str) -> Vec<String> {
 }
 
 pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
+    let global_config = config.clone().config.unwrap_or_default();
     let to_set = get_vars_to_set(&config, &new_path)?;
     let to_unset = get_vars_to_unset(&config, &old_path);
 
     for var in to_unset {
         println!("unset {}", var);
+    }
+
+    if global_config.env_hints.unwrap_or(false) {
+        let gray_start = r"\e[90m";
+        let gray_end = r"\e[0m";
+        println!(
+            "echo \"{}[cdwe] available env vars: {}{}\"",
+            gray_start,
+            to_set
+                .iter()
+                .map(|var| var.key.clone())
+                .collect::<Vec<String>>()
+                .join(", "),
+            gray_end
+        );
     }
 
     for var in to_set {
@@ -275,12 +293,14 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     let commands = get_commands_to_run(&config, &new_path);
 
     for cmd in commands {
-        let gray_start = r"\e[90m";
-        let gray_end = r"\e[0m";
-        println!(
-            "echo \"{}[cdwe] running command: {}{}\"",
-            gray_start, cmd, gray_end
-        );
+        if global_config.run_hints.unwrap_or(false) {
+            let gray_start = r"\e[90m";
+            let gray_end = r"\e[0m";
+            println!(
+                "echo \"{}[cdwe] running command: {}{}\"",
+                gray_start, cmd, gray_end
+            );
+        }
         println!("{}", cmd);
     }
 
@@ -291,6 +311,21 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     }
 
     let aliases = get_aliases_to_set(&config, &new_path)?;
+
+    if global_config.alias_hints.unwrap_or(false) {
+        let gray_start = r"\e[90m";
+        let gray_end = r"\e[0m";
+        println!(
+            "echo \"{}[cdwe] available aliases: {}{}\"",
+            gray_start,
+            aliases
+                .iter()
+                .map(|alias| alias.name.clone())
+                .collect::<Vec<String>>()
+                .join(", "),
+            gray_end
+        );
+    }
 
     for alias in aliases {
         let mut alias_string = format!("{}(){{\n", alias.name);

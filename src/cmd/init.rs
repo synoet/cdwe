@@ -78,20 +78,14 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
             .context("failed to convert path to string")?,
     );
 
-    match config {
-        Some(config) => {
-            let cd_command = config
-                .config
-                .unwrap_or(GlobalConfig {
-                    cd_command: shell.get_default_command(),
-                })
-                .cd_command;
-            shell_script = shell_script.replace("{{{cd_command}}}", cd_command.as_str());
-        }
-        _ => {
-            shell_script = shell_script.replace("{{{cd_command}}}", &shell.get_default_command());
-        }
-    }
+    let cd_command = match config.and_then(|c| c.config) {
+        Some(global_config) => global_config
+            .cd_command
+            .unwrap_or_else(|| shell.get_default_command().to_string()),
+        None => shell.get_default_command().to_string(),
+    };
+
+    shell_script = shell_script.replace("{{{cd_command}}}", &cd_command);
 
     std::fs::write(&shell_script_target, shell_script)?;
 

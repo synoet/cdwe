@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Config {
     pub config: Option<GlobalConfig>,
     #[serde(rename = "directory")]
@@ -17,9 +17,36 @@ pub struct Config {
     pub aliases: Option<Vec<DirectoryEnvAlias>>,
 }
 
-#[derive(Deserialize, Debug)]
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            config: None,
+            directories: vec![],
+            variables: None,
+            commands: None,
+            files: None,
+            aliases: None,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct GlobalConfig {
-    pub cd_command: String,
+    pub cd_command: Option<String>,
+    pub env_hints: Option<bool>,
+    pub run_hints: Option<bool>,
+    pub alias_hints: Option<bool>,
+}
+
+impl Default for GlobalConfig {
+    fn default() -> Self {
+        GlobalConfig {
+            cd_command: None,
+            env_hints: Some(true),
+            run_hints: Some(true),
+            alias_hints: Some(true),
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
