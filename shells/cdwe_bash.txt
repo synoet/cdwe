@@ -19,8 +19,10 @@ cdwe_on_load
 
 function cdwe-reload () {
   {{{exec_path}}} reload bash
+  bash
 }
 
 function cdwe-remove() {
   {{{exec_path}}} remove bash 
+  bash
 }

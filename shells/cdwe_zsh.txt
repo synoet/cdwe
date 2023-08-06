@@ -15,14 +15,17 @@ _cdwe_on_load() {
     result="$({{{exec_path}}} run --old_dir="$current_dir" --new_dir="$current_dir")"
     eval "${result}"
 }
+
 _cdwe_on_load
 
 function cdwe-reload () {
   {{{exec_path}}} reload zsh
+  zsh
 }
 
 function cdwe-remove() {
   {{{exec_path}}} remove zsh 
+  zsh
 }
 
 

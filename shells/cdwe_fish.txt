@@ -19,10 +19,12 @@ cdwe_on_load
 
 function cdwe-remove
   ({{{exec_path}}} remove fish)
+  fish
 end
 
 function cdwe-reload
   ({{{exec_path}}} reload fish)
+  fish
 end
 
 
