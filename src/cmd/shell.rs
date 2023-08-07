@@ -83,8 +83,8 @@ impl Shell {
 
     pub fn get_alias_command(&self) -> (String, String) {
         match self {
-            Shell::Zsh => ("{{{alias_name}}}() {{\n".to_string(), "{}\n".to_string()),
-            Shell::Bash => ("{{{alias_name}}}() {{\n".to_string(), "{}\n".to_string()),
+            Shell::Zsh => ("{{{alias_name}}}() {\n".to_string(), "}\n".to_string()),
+            Shell::Bash => ("{{{alias_name}}}() {\n".to_string(), "}\n".to_string()),
             Shell::Fish => (
                 "function {{{alias_name}}} -d \"{}\"\n".to_string(),
                 "end\n".to_string(),
