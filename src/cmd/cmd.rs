@@ -1,4 +1,4 @@
-use crate::cmd::init::Shell;
+use crate::cmd::shell::Shell;
 use clap::{command, Parser, Subcommand};
 
 #[derive(Debug, Parser)]

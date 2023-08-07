@@ -1,4 +1,5 @@
 use super::super::config::{Config, EnvAlias};
+use super::Shell;
 use anyhow::{anyhow, Context, Result};
 use std::collections::HashMap;
 use std::path::Path;
@@ -308,11 +309,24 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     }
 
     for alias in aliases {
-        let mut alias_string = format!("{}(){{\n", alias.name);
+        let (start_str, end_str) = Shell::from_string(
+            &config
+                .config
+                .clone()
+                .unwrap_or_default()
+                .shell
+                .context("failed to get configured shell, make sure it is in your config")?
+                .to_string(),
+        )?
+        .get_alias_command();
+
+        let mut alias_string = start_str.replace("{{{alias_name}}}", &alias.name);
+
         for cmd in alias.commands {
             alias_string.push_str(&format!("{}\n", cmd));
         }
-        println!("{}\n}}\n", alias_string);
+
+        println!("{}\n{}\n", alias_string, end_str);
     }
 
     Ok(())

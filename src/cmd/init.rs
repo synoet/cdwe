@@ -1,72 +1,16 @@
-use super::super::config::{Config, GlobalConfig};
+use super::super::config::Config;
+use super::Shell;
 use anyhow::{Context, Result};
-use clap::ValueEnum;
 use std::path::Path;
 
-#[derive(Debug, ValueEnum, Clone)]
-pub enum Shell {
-    Bash,
-    Fish,
-    Zsh,
-}
-
-impl Shell {
-    fn get_config_path(&self) -> Result<String> {
-        let home_var = std::env::var("HOME").context("no $HOME set")?;
-        let home = Path::new(&home_var);
-        match self {
-            Shell::Bash => Ok(std::path::Path::join(home, ".bashrc")
-                .to_str()
-                .context("failed to get bash config path")?
-                .to_string()),
-            Shell::Fish => Ok(std::path::Path::join(home, "/config/fish/config.fish")
-                .to_str()
-                .context("failed to get fish config path")?
-                .to_string()),
-            Shell::Zsh => Ok(std::path::Path::join(home, ".zshrc")
-                .to_str()
-                .context("failed to get zsh config path")?
-                .to_string()),
-        }
-    }
-
-    fn get_shell_script(&self) -> String {
-        match self {
-            Shell::Bash => include_str!("../../shells/cdwe_bash.txt").to_string(),
-            Shell::Fish => include_str!("../../shells/cdwe_fish.txt").to_string(),
-            Shell::Zsh => include_str!("../../shells/cdwe_zsh.txt").to_string(),
-        }
-    }
-
-    fn get_shell_script_target(&self) -> Result<String> {
-        let home_var = std::env::var("HOME").context("no $HOME set")?;
-        let home = Path::new(&home_var);
-        match self {
-            Shell::Bash => Ok(std::path::Path::join(home, ".cdwe.bash")
-                .to_str()
-                .context("failed to get bash target")?
-                .to_string()),
-            Shell::Fish => Ok(std::path::Path::join(home, ".cdwe.fish")
-                .to_str()
-                .context("failed to get fish target")?
-                .to_string()),
-            Shell::Zsh => Ok(std::path::Path::join(home, ".cdwe.zsh")
-                .to_str()
-                .context("failed to get zsh target")?
-                .to_string()),
-        }
-    }
-
-    fn get_default_command(&self) -> String {
-        match self {
-            Shell::Bash => "builtin cd".to_string(),
-            Shell::Fish => "cd".to_string(),
-            Shell::Zsh => "builtin cd".to_string(),
-        }
-    }
-}
-
 pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
+    let home_var = std::env::var("HOME").context("no $HOME set")?;
+    let home = Path::new(&home_var);
+    let toml_path = std::path::Path::join(home, ".cdwe.toml")
+        .to_str()
+        .context("failed to get toml path")?
+        .to_string();
+
     let config_path = shell.get_config_path()?;
     let mut shell_script = shell.get_shell_script();
     let shell_script_target = shell.get_shell_script_target()?;
@@ -88,6 +32,14 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
     shell_script = shell_script.replace("{{{cd_command}}}", &cd_command);
 
     std::fs::write(&shell_script_target, shell_script)?;
+
+    let toml_content: String = std::fs::read_to_string(&config_path).unwrap_or("".to_string());
+
+    if toml_content.is_empty() {
+        let default_config = Config::default_for_shell(shell);
+        std::fs::write(&toml_path, toml::to_string(&default_config)?)
+            .context("failed to write default config")?;
+    }
 
     let source_string = format!(
         "if [ -f '{}' ]; then . '{}'; fi",

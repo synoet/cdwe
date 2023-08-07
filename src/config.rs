@@ -1,8 +1,9 @@
+use crate::cmd::Shell;
 use anyhow::{Context, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Config {
     pub config: Option<GlobalConfig>,
     #[serde(rename = "directory")]
@@ -30,8 +31,34 @@ impl Default for Config {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+impl Config {
+    pub fn default_for_shell(shell: Shell) -> Self {
+        Config {
+            config: Some(GlobalConfig {
+                shell: Some(shell.to_string()),
+                ..Default::default()
+            }),
+            directories: vec![EnvDirectory {
+                path: "~".to_string(),
+                vars: Some(HashMap::from([(
+                    "CDWE_ENABLED".to_string(),
+                    "true".to_string(),
+                )])),
+                load_from: None,
+                run: None,
+                aliases: None,
+            }],
+            variables: None,
+            commands: None,
+            files: None,
+            aliases: None,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GlobalConfig {
+    pub shell: Option<String>,
     pub cd_command: Option<String>,
     pub env_hints: Option<bool>,
     pub run_hints: Option<bool>,
@@ -41,6 +68,7 @@ pub struct GlobalConfig {
 impl Default for GlobalConfig {
     fn default() -> Self {
         GlobalConfig {
+            shell: None,
             cd_command: None,
             env_hints: Some(true),
             run_hints: Some(true),
@@ -49,7 +77,7 @@ impl Default for GlobalConfig {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvDirectory {
     pub path: String,
     pub vars: Option<HashMap<String, String>>,
@@ -58,33 +86,33 @@ pub struct EnvDirectory {
     pub aliases: Option<Vec<EnvAlias>>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvAlias {
     pub name: String,
     pub commands: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct DirectoryEnvAlias {
     pub name: String,
     pub commands: Vec<String>,
     pub paths: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvVariable {
     pub name: String,
     pub value: String,
     pub dirs: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvCommand {
     pub run: String,
     pub dirs: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvFile {
     pub load_from: String,
     pub dirs: Vec<String>,
