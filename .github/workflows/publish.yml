@@ -23,4 +23,4 @@ jobs:
 
       - run: cargo publish --token ${CRATES_API_KEY}
         env:
-          CRATES_TOKEN: ${{ secrets.CRATES_API_KEY }}
+          CRATES_API_KEY: ${{ secrets.CRATES_API_KEY }}
