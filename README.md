@@ -48,7 +48,7 @@ echo $IS_DEBUG
 
 ## Usage
 
-#### Defining Per Directory Env Variables
+### Defining Per Directory Env Variables
 ---
 
 You can explicitly define environment variables in two ways:
@@ -83,7 +83,7 @@ Here you can define one env var for multiple directories.
 
 `dirs`: Is a list of directories to load this env var for
 
-#### Loading From .env files
+### Loading From .env files
 ---
 The directory object also takes a `load_from` field
 ```toml
@@ -111,7 +111,7 @@ dirs = [
 ]
 ```
 
-#### Defining Aliases Per Directory
+### Defining Aliases Per Directory
 ---
 Here we can define aliases that will be set and unset as functions only in specific directories
 
@@ -141,7 +141,7 @@ dirs = [
 ```
 Here you are defining the same alias for multiple directories.
 
-#### Defining Auto Commands
+### Defining Auto Commands
 ---
 Here we can define commands that will automatically run anytime we cd into a specific directory
 ```toml
@@ -170,34 +170,69 @@ dirs = [
 ```
 
 ## Configuration 
-#### Setting directory environment variables
-```toml
-[[directory]]
-path = "/Users/synoet/dev/something" # the path to the directory
-vars = {"IS_DEBUG" = "true", "IS_PROD" = "false"} # set environment variables
-load_from = [".env", ".env.local"] # will source environment variables from these files
-
-[[directory]]
-path = "/Users/synoet/dev" # the path to the directory
-load_from = [".env"] # will source environment variables from these files
-```
-
-#### What if I use something other than builtin cd?
-
-1. You can define a `cd_command` in the config section of the `~/cdwe.toml`.
+### Global Configuration Options
 ```toml
 [config]
-cd_command = "z" # if you are using zoxide
-
-#... rest of config
+# Shell (Created during cdwe init <shell>)
+shell = "zsh"
+# Custom CD Command (defaults to cd)
+cd_command = "z"
+# Show alias hints on cd
+alias_hints = true
+# Show env hints on cd
+env_hints = true
+# shoe run hints on cd
+run_hints = true
 ```
 
-2. Run `cdwe-reload`
-```bash
-cdwe-reload # reloads your config
+### Example Configuration
+```toml
+[config]
+cd_command = "z"
+alias_hints = true
+env_hints = true
+command_hints = true
+run_hints = true
+shell = "zsh"
 
-zsh #reload your shell, use bash or fish if you use those.
+# Defined a directory
+# Will have env var "TEST" set in this directory
+# Will auto run "git fetch -p" whenever you cd into this dir
+# Exposes the following aliases in that directory and sub dirs
+[[directory]]
+path = "/Users/synoet/dev/cdwe"
+vars = { "TEST" = "testing" }
+runs = ["git fetch -p"]
+aliases = [
+  { name = "build", commands = ["cargo build --release"]},
+  { name = "run", commands = ["cargo run"]},
+  { name = "ci", commands = ["cargo fmt", "cargo test"]}
+]
 
+# sets the "ENV_VAR" env var in the following directories
+[[env_variable]]
+name = "ENV_VAR"
+value = "THIS IS A TEST"
+dirs = [
+  "/Users/synoet/dev/cdwe",
+  "/Users/synoet/dev/ballast"
+]
+
+# auto loads from .env file in following directories
+[[env_file]]
+load_from = ".env"
+dirs = [
+  "/Users/synoet/dev/cdwe",
+  "/Users/synoet/dev/project-api"
+]
+
+# will auto run the command "git fetch -p" in the following directories
+[[command]]
+run = "git fetch -p"
+dirs = [
+  "/Users/synoet/dev/cdwe",
+  "/Users/synoet/dev/project-api"
+]
 ```
 
 ## Uninstalling
