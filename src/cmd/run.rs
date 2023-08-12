@@ -252,7 +252,7 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
         println!("unset {}", var);
     }
 
-    if global_config.env_hints.unwrap_or(false) {
+    if global_config.env_hints.unwrap_or(false) && to_set.len() > 0 {
         let gray_start = r"\e[90m";
         let gray_end = r"\e[0m";
         println!(
@@ -293,7 +293,7 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
 
     let aliases = get_aliases_to_set(&config, &new_path)?;
 
-    if global_config.alias_hints.unwrap_or(false) {
+    if global_config.alias_hints.unwrap_or(false) && aliases.len() > 0 {
         let gray_start = r"\e[90m";
         let gray_end = r"\e[0m";
         println!(
