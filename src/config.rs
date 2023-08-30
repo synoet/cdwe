@@ -40,10 +40,7 @@ impl Config {
             }),
             directories: vec![EnvDirectory {
                 path: "~".to_string(),
-                vars: Some(HashMap::from([(
-                    "CDWE_ENABLED".to_string(),
-                    "true".to_string(),
-                )])),
+                vars: None,
                 load_from: None,
                 run: None,
                 aliases: None,

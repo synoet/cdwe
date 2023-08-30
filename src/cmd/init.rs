@@ -6,7 +6,7 @@ use std::path::Path;
 pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
     let home_var = std::env::var("HOME").context("no $HOME set")?;
     let home = Path::new(&home_var);
-    let toml_path = std::path::Path::join(home, ".cdwe.toml")
+    let toml_path = std::path::Path::join(home, "cdwe.toml")
         .to_str()
         .context("failed to get toml path")?
         .to_string();
@@ -33,7 +33,7 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
 
     std::fs::write(&shell_script_target, shell_script)?;
 
-    let toml_content: String = std::fs::read_to_string(&config_path).unwrap_or("".to_string());
+    let toml_content: String = std::fs::read_to_string(&toml_path).unwrap_or("".to_string());
 
     if toml_content.is_empty() {
         let default_config = Config::default_for_shell(shell);
