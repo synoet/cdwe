@@ -1,14 +1,7 @@
-use super::super::config::{Config, EnvAlias};
+use super::super::config::{Config, EnvAlias, EnvVariable};
 use super::Shell;
 use anyhow::{anyhow, Context, Result};
-use std::collections::HashMap;
 use std::path::Path;
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct EnvVar {
-    pub key: String,
-    pub value: String,
-}
 
 fn trim_quotes(s: &str) -> String {
     if s.len() < 2 {
@@ -22,7 +15,7 @@ fn trim_quotes(s: &str) -> String {
     }
 }
 
-fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVar>> {
+fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVariable>> {
     let lines = content
         .lines()
         .filter(|line| !line.contains('#') && !line.trim().is_empty());
@@ -37,8 +30,8 @@ fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVar>> {
         let key = trim_quotes(split.0);
         let value = trim_quotes(split.1);
 
-        vars.push(EnvVar {
-            key: key.to_string(),
+        vars.push(EnvVariable {
+            name: key.to_string(),
             value: value.to_string(),
         });
     }
@@ -46,9 +39,9 @@ fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVar>> {
     Ok(vars)
 }
 
-pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
+pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVariable>> {
     // Env variables defined in the config
-    let mut variables: Vec<EnvVar> = vec![];
+    let mut variables: Vec<EnvVariable> = vec![];
     variables.extend(
         config
             .directories
@@ -61,18 +54,18 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
             })
             .flat_map(|dir| {
                 dir.vars
-                    .unwrap_or(HashMap::new())
+                    .unwrap_or(vec![])
                     .iter()
-                    .map(|var| EnvVar {
-                        key: var.0.clone(),
-                        value: var.1.clone(),
+                    .map(|var| EnvVariable {
+                        name: var.name.clone(),
+                        value: var.value.clone(),
                     })
-                    .collect::<Vec<EnvVar>>()
+                    .collect::<Vec<EnvVariable>>()
             })
-            .collect::<Vec<EnvVar>>(),
+            .collect::<Vec<EnvVariable>>(),
     );
 
-    let mut file_vars: Vec<EnvVar> = vec![];
+    let mut file_vars: Vec<EnvVariable> = vec![];
 
     // Env variabled defined in the file specified in the config
     for dir in config.directories.clone().into_iter() {
@@ -104,14 +97,14 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVar>> {
                     path.starts_with(base_path) || base_path == path
                 })
             })
-            .map(|var| EnvVar {
-                key: var.name,
+            .map(|var| EnvVariable {
+                name: var.name,
                 value: var.value,
             })
-            .collect::<Vec<EnvVar>>(),
+            .collect::<Vec<EnvVariable>>(),
     );
 
-    let mut ext_file_vars: Vec<EnvVar> = vec![];
+    let mut ext_file_vars: Vec<EnvVariable> = vec![];
 
     let matched_files = config
         .files
@@ -146,7 +139,7 @@ pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
     get_vars_to_set(config, old_path)
         .unwrap_or(vec![])
         .iter()
-        .map(|var| var.key.clone())
+        .map(|var| var.name.clone())
         .collect()
 }
 
@@ -260,7 +253,7 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
             gray_start,
             to_set
                 .iter()
-                .map(|var| var.key.clone())
+                .map(|var| var.name.clone())
                 .collect::<Vec<String>>()
                 .join(", "),
             gray_end
@@ -268,7 +261,7 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     }
 
     for var in to_set {
-        println!("export {}=\"{}\"", var.key, var.value);
+        println!("export {}=\"{}\"", var.name, var.value);
     }
 
     let commands = get_commands_to_run(&config, &new_path);
@@ -347,7 +340,7 @@ mod tests {
     #[test]
     fn test_parse_env_file() {
         use super::parse_env_file;
-        use super::EnvVar;
+        use crate::config::EnvVariable;
 
         let test_content = "\
             # THIS IS A TEST COMMMENT\n\
@@ -359,25 +352,25 @@ mod tests {
             ANOTHER_VAR=hello world this is a test\n\
         ";
 
-        let expected: Vec<EnvVar> = vec![
-            EnvVar {
-                key: "TEST_VAR".to_string(),
+        let expected: Vec<EnvVariable> = vec![
+            EnvVariable {
+                name: "TEST_VAR".to_string(),
                 value: "true".to_string(),
             },
-            EnvVar {
-                key: "ANOTHER_VAR".to_string(),
+            EnvVariable {
+                name: "ANOTHER_VAR".to_string(),
                 value: "123".to_string(),
             },
-            EnvVar {
-                key: "QUOTED_VAR".to_string(),
+            EnvVariable {
+                name: "QUOTED_VAR".to_string(),
                 value: "test".to_string(),
             },
-            EnvVar {
-                key: "SINGLE_QUOTED_VAR".to_string(),
+            EnvVariable {
+                name: "SINGLE_QUOTED_VAR".to_string(),
                 value: "test".to_string(),
             },
-            EnvVar {
-                key: "ANOTHER_VAR".to_string(),
+            EnvVariable {
+                name: "ANOTHER_VAR".to_string(),
                 value: "hello world this is a test".to_string(),
             },
         ];

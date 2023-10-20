@@ -1,7 +1,6 @@
 use crate::cmd::Shell;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Config {
@@ -9,7 +8,7 @@ pub struct Config {
     #[serde(rename = "directory")]
     pub directories: Vec<EnvDirectory>,
     #[serde(rename = "env_variable")]
-    pub variables: Option<Vec<EnvVariable>>,
+    pub variables: Option<Vec<DirEnvVariable>>,
     #[serde(rename = "command")]
     pub commands: Option<Vec<EnvCommand>>,
     #[serde(rename = "env_file")]
@@ -77,7 +76,7 @@ impl Default for GlobalConfig {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvDirectory {
     pub path: String,
-    pub vars: Option<HashMap<String, String>>,
+    pub vars: Option<Vec<EnvVariable>>,
     pub load_from: Option<Vec<String>>,
     pub run: Option<Vec<String>>,
     pub aliases: Option<Vec<EnvAlias>>,
@@ -97,10 +96,16 @@ pub struct DirectoryEnvAlias {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct EnvVariable {
+pub struct DirEnvVariable {
     pub name: String,
     pub value: String,
     pub dirs: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+pub struct EnvVariable {
+    pub name: String,
+    pub value: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
