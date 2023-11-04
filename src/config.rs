@@ -1,6 +1,35 @@
 use crate::cmd::Shell;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+pub type EnvVariableVec = Vec<EnvVariable>;
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum EnvVariableStruct {
+    HashMap(HashMap<String, String>),
+    EnvVariableVec(EnvVariableVec),
+}
+
+impl Default for EnvVariableStruct {
+    fn default() -> Self {
+        EnvVariableStruct::EnvVariableVec(vec![])
+    }
+}
+
+impl From<EnvVariableStruct> for EnvVariableVec {
+    fn from(env_variable: EnvVariableStruct) -> Self {
+        match env_variable {
+            EnvVariableStruct::EnvVariableVec(dir_env_variable) => dir_env_variable,
+            EnvVariableStruct::HashMap(hash_map) => {
+                // Convert the HashMap into a Vec<DirEnvVariable>
+                hash_map
+                    .into_iter()
+                    .map(|(name, value)| EnvVariable { name, value })
+                    .collect()
+            }
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Config {
@@ -76,7 +105,7 @@ impl Default for GlobalConfig {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct EnvDirectory {
     pub path: String,
-    pub vars: Option<Vec<EnvVariable>>,
+    pub vars: Option<EnvVariableStruct>,
     pub load_from: Option<Vec<String>>,
     pub run: Option<Vec<String>>,
     pub aliases: Option<Vec<EnvAlias>>,

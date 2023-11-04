@@ -1,4 +1,4 @@
-use super::super::config::{Config, EnvAlias, EnvVariable};
+use super::super::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct, EnvVariableVec};
 use super::Shell;
 use anyhow::{anyhow, Context, Result};
 use std::path::Path;
@@ -52,16 +52,7 @@ pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVariabl
                 let path = Path::new(new_path);
                 path.starts_with(path_to_check) || path_to_check == path
             })
-            .flat_map(|dir| {
-                dir.vars
-                    .unwrap_or(vec![])
-                    .iter()
-                    .map(|var| EnvVariable {
-                        name: var.name.clone(),
-                        value: var.value.clone(),
-                    })
-                    .collect::<Vec<EnvVariable>>()
-            })
+            .flat_map(|dir| EnvVariableVec::from(dir.vars.unwrap_or(EnvVariableStruct::default())))
             .collect::<Vec<EnvVariable>>(),
     );
 
