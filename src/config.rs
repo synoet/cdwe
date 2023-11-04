@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 pub type EnvVariableVec = Vec<EnvVariable>;
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(untagged)]
 pub enum EnvVariableStruct {
     HashMap(HashMap<String, String>),
     EnvVariableVec(EnvVariableVec),
