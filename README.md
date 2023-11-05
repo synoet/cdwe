@@ -56,6 +56,15 @@ You can explicitly define environment variables in two ways:
 [[directory]]
 path = "/Users/synoet/dev/project"
 vars = {"IS_DEBUG" = "true", "IS_PROD" = "false"}
+
+# or
+
+[[directory]]
+path = "/Users/synoet/dev/project"
+vars = [
+    {name="IS_DEBUG", value ="true"},
+    {name="IS_PROD", value="false"}
+]
 ```
 `path`: the path to your directory you are configuring
 
