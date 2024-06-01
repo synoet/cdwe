@@ -42,11 +42,10 @@ fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVariable>> {
 }
 
 
-pub fn run(config: &Config, cache: &Cache, old_path: String, new_path: String) -> Result<()> {
+pub fn run(cache: &Cache, old_path: String, new_path: String) -> Result<()> {
     let old_cached_dir = cache.get(&old_path);
     let new_cached_dir = cache.get(&new_path);
 
-    let global_config = config.clone().config.unwrap_or_default();
     let to_set = match new_cached_dir {
         Some(dir) => dir.variables.clone(),
         None => vec![],
@@ -61,21 +60,6 @@ pub fn run(config: &Config, cache: &Cache, old_path: String, new_path: String) -
         println!("unset {}", var);
     }
 
-    if global_config.env_hints.unwrap_or(false) && to_set.len() > 0 {
-        let gray_start = r"\e[90m";
-        let gray_end = r"\e[0m";
-        println!(
-            "echo \"{}[cdwe] available env vars: {}{}\"",
-            gray_start,
-            to_set
-                .iter()
-                .map(|var| var.name.clone())
-                .collect::<Vec<String>>()
-                .join(", "),
-            gray_end
-        );
-    }
-
     for var in to_set {
         println!("export {}=\"{}\"", var.name, var.value);
     }
@@ -86,14 +70,6 @@ pub fn run(config: &Config, cache: &Cache, old_path: String, new_path: String) -
     };
 
     for cmd in commands {
-        if global_config.run_hints.unwrap_or(false) {
-            let gray_start = r"\e[90m";
-            let gray_end = r"\e[0m";
-            println!(
-                "echo \"{}[cdwe] running command: {}{}\"",
-                gray_start, cmd, gray_end
-            );
-        }
         println!("{}", cmd);
     }
 
@@ -111,30 +87,9 @@ pub fn run(config: &Config, cache: &Cache, old_path: String, new_path: String) -
         None => vec![],
     };
 
-    if global_config.alias_hints.unwrap_or(false) && aliases.len() > 0 {
-        let gray_start = r"\e[90m";
-        let gray_end = r"\e[0m";
-        println!(
-            "echo \"{}[cdwe] available aliases: {}{}\"",
-            gray_start,
-            aliases
-                .iter()
-                .map(|alias| alias.name.clone())
-                .collect::<Vec<String>>()
-                .join(", "),
-            gray_end
-        );
-    }
-
     for alias in aliases {
         let (start_str, end_str) = Shell::from_string(
-            &config
-                .config
-                .clone()
-                .unwrap_or_default()
-                .shell
-                .context("failed to get configured shell, make sure it is in your config")?
-                .to_string(),
+            "zsh"
         )?
         .get_alias_command();
 

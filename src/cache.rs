@@ -1,5 +1,5 @@
 use crate::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -78,7 +78,7 @@ impl Cache {
 /// Returns the cache and a boolean indicating if the cache was created
 pub fn get_or_create_cache(
     cache_content: Option<&str>,
-    config: &Config,
+    config_content: &str,
     config_hash: &str,
 ) -> Result<(Cache, bool)> {
     if let Some(cache_content) = cache_content {
@@ -89,16 +89,21 @@ pub fn get_or_create_cache(
         }
     }
 
+    let config = Config::from_str(&config_content).context("failed to parse config")?;
+
     return Ok((Cache::from_config(&config, &config_hash), true));
 }
 
 pub fn write_cache(cache: &Cache, home: &str) -> Result<()> {
     let cache_content = serde_json::to_string(cache)?;
+    let home = home.to_string();
+    tokio::spawn(async move {
 
-    std::fs::write(
-        home.to_string() + "/.cdwe_cache.json",
-        cache_content.as_bytes(),
-    )?;
+        std::fs::write(
+            home.to_string() + "/.cdwe_cache.json",
+            cache_content.as_bytes(),
+        )
+    });
 
     Ok(())
 }

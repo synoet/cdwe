@@ -24,4 +24,5 @@ clap = { version="4.3.12", features=["derive"] }
 serde = {version = "1.0.171", features = ["derive"]}
 serde_json = "1.0.117"
 sha2 = "0.10.8"
+tokio = { version = "1.38.0", features = ["tokio-macros", "rt", "full"] }
 toml = "0.7.6"

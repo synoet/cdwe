@@ -7,7 +7,8 @@ use clap::Parser;
 use cmd::{init_shell, remove_shell, run, Cli};
 use config::Config;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let start_time = std::time::Instant::now(); 
     let matches = Cli::parse();
     let home = std::env::var("HOME").context("no $HOME set")?;
@@ -19,13 +20,13 @@ fn main() -> Result<()> {
         cmd::Commands::Run { old_dir, new_dir } => {
             let contents = std::fs::read_to_string(&config_path)
                 .with_context(|| format!("Could not read config file at {}", &config_path))?;
-            let config = Config::from_str(&contents).context("failed to parse config")?;
+            // let config = Config::from_str(&contents).context("failed to parse config")?;
             let config_hash = utils::get_content_hash(&contents);
             let cache_contents: Option<String> = std::fs::read_to_string(&cache_path).ok();
             let (cache, did_create_cache) =
-                cache::get_or_create_cache(cache_contents.as_deref(), &config, &config_hash)?;
+                cache::get_or_create_cache(cache_contents.as_deref(), &contents, &config_hash)?;
 
-            run(&config, &cache, old_dir, new_dir)?;
+            run(&cache, old_dir, new_dir)?;
 
             if did_create_cache {
                 cache::write_cache(&cache, &home)?;
