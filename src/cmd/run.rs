@@ -1,4 +1,5 @@
-use super::super::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct, EnvVariableVec};
+use crate::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct, EnvVariableVec};
+use crate::cache::Cache;
 use super::Shell;
 use anyhow::{anyhow, Context, Result};
 use std::path::Path;
@@ -15,6 +16,7 @@ fn trim_quotes(s: &str) -> String {
     }
 }
 
+// TODO: implement loading from .env file
 fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVariable>> {
     let lines = content
         .lines()
@@ -39,198 +41,21 @@ fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVariable>> {
     Ok(vars)
 }
 
-pub fn get_vars_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvVariable>> {
-    // Env variables defined in the config
-    let mut variables: Vec<EnvVariable> = vec![];
-    variables.extend(
-        config
-            .directories
-            .clone()
-            .into_iter()
-            .filter(move |dir| {
-                let path_to_check = Path::new(&dir.path);
-                let path = Path::new(new_path);
-                path.starts_with(path_to_check) || path_to_check == path
-            })
-            .flat_map(|dir| EnvVariableVec::from(dir.vars.unwrap_or(EnvVariableStruct::default())))
-            .collect::<Vec<EnvVariable>>(),
-    );
 
-    let mut file_vars: Vec<EnvVariable> = vec![];
+pub fn run(config: &Config, cache: &Cache, old_path: String, new_path: String) -> Result<()> {
+    let old_cached_dir = cache.get(&old_path);
+    let new_cached_dir = cache.get(&new_path);
 
-    // Env variabled defined in the file specified in the config
-    for dir in config.directories.clone().into_iter() {
-        let base_path = Path::new(&dir.path);
-        let path = Path::new(new_path);
-        if !path.starts_with(base_path) || base_path != path {
-            continue;
-        }
-        for file in dir.load_from.unwrap_or(vec![]) {
-            let file_path = base_path.join(Path::new(&file));
-            let content = std::fs::read_to_string(file_path)
-                .with_context(|| format!("Failed to read file: {}", file))?;
-
-            file_vars.extend(parse_env_file(&content, &file.to_string())?);
-        }
-    }
-
-    // Variables that where individually defined
-    variables.extend(
-        config
-            .variables
-            .clone()
-            .unwrap_or(vec![])
-            .into_iter()
-            .filter(|var| {
-                var.dirs.iter().any(|path| {
-                    let base_path = Path::new(path);
-                    let path = Path::new(new_path);
-                    path.starts_with(base_path) || base_path == path
-                })
-            })
-            .map(|var| EnvVariable {
-                name: var.name,
-                value: var.value,
-            })
-            .collect::<Vec<EnvVariable>>(),
-    );
-
-    let mut ext_file_vars: Vec<EnvVariable> = vec![];
-
-    let matched_files = config
-        .files
-        .clone()
-        .unwrap_or(vec![])
-        .into_iter()
-        .filter(|file| {
-            file.dirs.iter().any(|path| {
-                let base_path = Path::new(path);
-                let path = Path::new(new_path);
-                path.starts_with(base_path) || base_path == path
-            })
-        });
-
-    for env_file in matched_files {
-        let base_path = Path::new(new_path);
-        let path = Path::new(&env_file.load_from);
-
-        let file_path = base_path.join(Path::new(&path));
-        let content = std::fs::read_to_string(file_path)
-            .with_context(|| format!("Failed to read file: {}", env_file.load_from))?;
-
-        ext_file_vars.extend(parse_env_file(&content, &env_file.load_from)?);
-    }
-
-    variables.extend(file_vars);
-    variables.extend(ext_file_vars);
-    Ok(variables)
-}
-
-pub fn get_vars_to_unset(config: &Config, old_path: &str) -> Vec<String> {
-    get_vars_to_set(config, old_path)
-        .unwrap_or(vec![])
-        .iter()
-        .map(|var| var.name.clone())
-        .collect()
-}
-
-pub fn get_commands_to_run(config: &Config, new_path: &str) -> Vec<String> {
-    let mut commands: Vec<String> = vec![];
-    commands.extend(
-        config
-            .directories
-            .clone()
-            .into_iter()
-            .filter(move |dir| {
-                let path_to_check = Path::new(&dir.path);
-                let path = Path::new(new_path);
-                // only run commands for actual directory
-                // ignore sub directories
-                path_to_check == path
-            })
-            .flat_map(|dir| {
-                dir.run
-                    .unwrap_or(vec![])
-                    .iter()
-                    .map(|cmd| cmd.clone())
-                    .collect::<Vec<String>>()
-            })
-            .collect::<Vec<String>>(),
-    );
-
-    commands.extend(
-        config
-            .commands
-            .clone()
-            .unwrap_or(vec![])
-            .into_iter()
-            .filter(|cmd| {
-                cmd.dirs.iter().any(|path| {
-                    let base_path = Path::new(path);
-                    let path = Path::new(new_path);
-                    // only exact match
-                    base_path == path
-                })
-            })
-            .map(|cmd| cmd.run)
-            .collect::<Vec<String>>(),
-    );
-
-    commands
-}
-
-pub fn get_aliases_to_set(config: &Config, new_path: &str) -> Result<Vec<EnvAlias>> {
-    let mut aliases: Vec<EnvAlias> = vec![];
-
-    aliases.extend(
-        config
-            .directories
-            .clone()
-            .into_iter()
-            .filter(move |dir| {
-                let path_to_check = Path::new(&dir.path);
-                let path = Path::new(new_path);
-                path.starts_with(path_to_check) || path_to_check == path
-            })
-            .flat_map(|dir| dir.aliases.unwrap_or(vec![]))
-            .collect::<Vec<EnvAlias>>(),
-    );
-
-    aliases.extend(
-        config
-            .aliases
-            .clone()
-            .unwrap_or(vec![])
-            .into_iter()
-            .filter(|alias| {
-                alias.paths.iter().any(|path| {
-                    let base_path = Path::new(path);
-                    let path = Path::new(new_path);
-                    path.starts_with(base_path) || base_path == path
-                })
-            })
-            .map(|alias| EnvAlias {
-                name: alias.name,
-                commands: alias.commands,
-            })
-            .collect::<Vec<EnvAlias>>(),
-    );
-
-    Ok(aliases)
-}
-
-pub fn get_aliases_to_unset(config: &Config, old_path: &str) -> Vec<String> {
-    get_aliases_to_set(config, old_path)
-        .unwrap_or(vec![])
-        .iter()
-        .map(|alias| alias.name.clone())
-        .collect()
-}
-
-pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
     let global_config = config.clone().config.unwrap_or_default();
-    let to_set = get_vars_to_set(&config, &new_path)?;
-    let to_unset = get_vars_to_unset(&config, &old_path);
+    let to_set = match new_cached_dir {
+        Some(dir) => dir.variables.clone(),
+        None => vec![],
+    };
+
+    let to_unset = match old_cached_dir {
+        Some(dir) => dir.variables.clone().iter().map(|var| var.name.clone()).collect(),
+        None => vec![],
+    };
 
     for var in to_unset {
         println!("unset {}", var);
@@ -255,7 +80,10 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
         println!("export {}=\"{}\"", var.name, var.value);
     }
 
-    let commands = get_commands_to_run(&config, &new_path);
+    let commands = match new_cached_dir {
+        Some(dir) => dir.run.clone(),
+        None => vec![],
+    };
 
     for cmd in commands {
         if global_config.run_hints.unwrap_or(false) {
@@ -269,13 +97,19 @@ pub fn run(config: &Config, old_path: String, new_path: String) -> Result<()> {
         println!("{}", cmd);
     }
 
-    let aliases_to_unset = get_aliases_to_unset(&config, &old_path);
+    let aliases_to_unset = match old_cached_dir {
+        Some(dir) => dir.aliases.clone().iter().map(|alias| alias.name.clone()).collect(),
+        None => vec![],
+    };
 
     for alias in aliases_to_unset {
         println!("unset -f {} &> /dev/null", alias);
     }
 
-    let aliases = get_aliases_to_set(&config, &new_path)?;
+    let aliases = match new_cached_dir {
+        Some(dir) => dir.aliases.clone(),
+        None => vec![],
+    };
 
     if global_config.alias_hints.unwrap_or(false) && aliases.len() > 0 {
         let gray_start = r"\e[90m";

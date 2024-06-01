@@ -21,13 +21,10 @@ impl From<EnvVariableStruct> for EnvVariableVec {
     fn from(env_variable: EnvVariableStruct) -> Self {
         match env_variable {
             EnvVariableStruct::EnvVariableVec(dir_env_variable) => dir_env_variable,
-            EnvVariableStruct::HashMap(hash_map) => {
-                // Convert the HashMap into a Vec<DirEnvVariable>
-                hash_map
-                    .into_iter()
-                    .map(|(name, value)| EnvVariable { name, value })
-                    .collect()
-            }
+            EnvVariableStruct::HashMap(hash_map) => hash_map
+                .into_iter()
+                .map(|(name, value)| EnvVariable { name, value })
+                .collect(),
         }
     }
 }
@@ -157,6 +154,13 @@ impl Config {
 
         let config: Config = toml::from_str(&contents)
             .with_context(|| format!("Could not parse config file at {}", path))?;
+
+        Ok(config)
+    }
+
+    pub fn from_str(content: &str) -> Result<Self> {
+        let config: Config =
+            toml::from_str(content).with_context(|| format!("Could not parse config file"))?;
 
         Ok(config)
     }
