@@ -9,7 +9,7 @@ use config::Config;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let start_time = std::time::Instant::now(); 
+    let start_time = std::time::Instant::now();
     let matches = Cli::parse();
     let home = std::env::var("HOME").context("no $HOME set")?;
     let config_path = format!("{}/{}", &home, "cdwe.toml");

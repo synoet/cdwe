@@ -1,6 +1,6 @@
-use crate::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct, EnvVariableVec};
-use crate::cache::Cache;
 use super::Shell;
+use crate::cache::Cache;
+use crate::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct, EnvVariableVec};
 use anyhow::{anyhow, Context, Result};
 use std::path::Path;
 
@@ -41,7 +41,6 @@ fn parse_env_file(content: &str, file_name: &str) -> Result<Vec<EnvVariable>> {
     Ok(vars)
 }
 
-
 pub fn run(cache: &Cache, old_path: String, new_path: String) -> Result<()> {
     let old_cached_dir = cache.get(&old_path);
     let new_cached_dir = cache.get(&new_path);
@@ -52,7 +51,12 @@ pub fn run(cache: &Cache, old_path: String, new_path: String) -> Result<()> {
     };
 
     let to_unset = match old_cached_dir {
-        Some(dir) => dir.variables.clone().iter().map(|var| var.name.clone()).collect(),
+        Some(dir) => dir
+            .variables
+            .clone()
+            .iter()
+            .map(|var| var.name.clone())
+            .collect(),
         None => vec![],
     };
 
@@ -74,7 +78,12 @@ pub fn run(cache: &Cache, old_path: String, new_path: String) -> Result<()> {
     }
 
     let aliases_to_unset = match old_cached_dir {
-        Some(dir) => dir.aliases.clone().iter().map(|alias| alias.name.clone()).collect(),
+        Some(dir) => dir
+            .aliases
+            .clone()
+            .iter()
+            .map(|alias| alias.name.clone())
+            .collect(),
         None => vec![],
     };
 
@@ -88,10 +97,7 @@ pub fn run(cache: &Cache, old_path: String, new_path: String) -> Result<()> {
     };
 
     for alias in aliases {
-        let (start_str, end_str) = Shell::from_string(
-            "zsh"
-        )?
-        .get_alias_command();
+        let (start_str, end_str) = Shell::from_string("zsh")?.get_alias_command();
 
         let mut alias_string = start_str.replace("{{{alias_name}}}", &alias.name);
 

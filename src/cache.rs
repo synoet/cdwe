@@ -1,5 +1,5 @@
 use crate::config::{Config, EnvAlias, EnvVariable, EnvVariableStruct};
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -98,7 +98,6 @@ pub fn write_cache(cache: &Cache, home: &str) -> Result<()> {
     let cache_content = serde_json::to_string(cache)?;
     let home = home.to_string();
     tokio::spawn(async move {
-
         std::fs::write(
             home.to_string() + "/.cdwe_cache.json",
             cache_content.as_bytes(),
