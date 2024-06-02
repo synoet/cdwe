@@ -9,7 +9,6 @@ use config::Config;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let start_time = std::time::Instant::now();
     let matches = Cli::parse();
     let home = std::env::var("HOME").context("no $HOME set")?;
     let config_path = format!("{}/{}", &home, "cdwe.toml");
@@ -20,9 +19,8 @@ async fn main() -> Result<()> {
         cmd::Commands::Run { old_dir, new_dir } => {
             let contents = std::fs::read_to_string(&config_path)
                 .with_context(|| format!("Could not read config file at {}", &config_path))?;
-            // let config = Config::from_str(&contents).context("failed to parse config")?;
             let config_hash = utils::get_content_hash(&contents);
-            let cache_contents: Option<String> = std::fs::read_to_string(&cache_path).ok();
+            let cache_contents: Option<String> = std::fs::read_to_string(cache_path).ok();
             let (cache, did_create_cache) =
                 cache::get_or_create_cache(cache_contents.as_deref(), &contents, &config_hash)?;
 
@@ -38,8 +36,6 @@ async fn main() -> Result<()> {
         }
         cmd::Commands::Remove { shell } => remove_shell(shell.context("no shell passed")?)?,
     }
-    let end_time = std::time::Instant::now();
 
-    println!("command took {:?}", end_time - start_time);
     Ok(())
 }

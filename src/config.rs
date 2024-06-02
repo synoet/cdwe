@@ -11,12 +11,6 @@ pub enum EnvVariableStruct {
     EnvVariableVec(EnvVariableVec),
 }
 
-impl Default for EnvVariableStruct {
-    fn default() -> Self {
-        EnvVariableStruct::EnvVariableVec(vec![])
-    }
-}
-
 impl From<EnvVariableStruct> for EnvVariableVec {
     fn from(env_variable: EnvVariableStruct) -> Self {
         match env_variable {
@@ -29,7 +23,7 @@ impl From<EnvVariableStruct> for EnvVariableVec {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Config {
     pub config: Option<GlobalConfig>,
     #[serde(rename = "directory")]
@@ -42,19 +36,6 @@ pub struct Config {
     pub files: Option<Vec<EnvFile>>,
     #[serde(rename = "alias")]
     pub aliases: Option<Vec<DirectoryEnvAlias>>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            config: None,
-            directories: vec![],
-            variables: None,
-            commands: None,
-            files: None,
-            aliases: None,
-        }
-    }
 }
 
 impl Config {
@@ -160,7 +141,7 @@ impl Config {
 
     pub fn from_str(content: &str) -> Result<Self> {
         let config: Config =
-            toml::from_str(content).with_context(|| format!("Could not parse config file"))?;
+            toml::from_str(content).with_context(|| "Could not parse config file")?;
 
         Ok(config)
     }

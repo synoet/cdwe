@@ -18,13 +18,18 @@ pub struct DirCache {
 /// Cache is stored in a json file ussually ~/.cdwe_cache.json
 #[derive(Serialize, Deserialize)]
 pub struct Cache {
-    hash: String,
+    pub shell: String,
+    pub hash: String,
     values: DirCacheMap,
 }
 
 impl Cache {
-    pub fn new(hash: String, values: DirCacheMap) -> Self {
-        Cache { hash, values }
+    pub fn new(shell: String, hash: String, values: DirCacheMap) -> Self {
+        Cache {
+            shell,
+            hash,
+            values,
+        }
     }
 
     pub fn from_config(config: &Config, config_hash: &str) -> Self {
@@ -33,7 +38,7 @@ impl Cache {
         for directory in &config.directories {
             let variables: Vec<EnvVariable> = match &directory.vars {
                 Some(EnvVariableStruct::HashMap(hash_map)) => hash_map
-                    .into_iter()
+                    .iter()
                     .map(|(name, value)| EnvVariable {
                         name: name.clone(),
                         value: value.clone(),
@@ -65,7 +70,12 @@ impl Cache {
             values.insert(directory.path.clone(), dir_cache);
         }
 
-        return Cache::new(config_hash.to_string(), values);
+        let shell = match &config.config {
+            Some(global_config) => global_config.shell.clone().unwrap_or("bash".to_string()),
+            None => "bash".to_string(),
+        };
+
+        Cache::new(shell, config_hash.to_string(), values)
     }
 
     pub fn get(&self, path: &str) -> Option<&DirCache> {
@@ -89,9 +99,9 @@ pub fn get_or_create_cache(
         }
     }
 
-    let config = Config::from_str(&config_content).context("failed to parse config")?;
+    let config = Config::from_str(config_content).context("failed to parse config")?;
 
-    return Ok((Cache::from_config(&config, &config_hash), true));
+    Ok((Cache::from_config(&config, config_hash), true))
 }
 
 pub fn write_cache(cache: &Cache, home: &str) -> Result<()> {

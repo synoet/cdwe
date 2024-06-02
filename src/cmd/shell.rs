@@ -9,6 +9,16 @@ pub enum Shell {
     Zsh,
 }
 
+impl ToString for Shell {
+    fn to_string(&self) -> String {
+        match self {
+            Shell::Bash => "bash".to_string(),
+            Shell::Fish => "fish".to_string(),
+            Shell::Zsh => "zsh".to_string(),
+        }
+    }
+}
+
 impl Shell {
     pub fn get_config_path(&self) -> Result<String> {
         let home_var = std::env::var("HOME").context("no $HOME set")?;
@@ -26,14 +36,6 @@ impl Shell {
                 .to_str()
                 .context("failed to get zsh config path")?
                 .to_string()),
-        }
-    }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            Shell::Bash => "bash".to_string(),
-            Shell::Fish => "fish".to_string(),
-            Shell::Zsh => "zsh".to_string(),
         }
     }
 
