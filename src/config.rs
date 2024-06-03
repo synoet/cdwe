@@ -24,6 +24,22 @@ impl From<EnvVariableStruct> for EnvVariableVec {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
+pub struct LocalConfig {
+    pub variables: Option<Vec<EnvVariable>>,
+    pub aliases: Option<Vec<EnvAlias>>,
+    pub commands: Option<Vec<String>>,
+}
+
+impl LocalConfig {
+    pub fn from_str(content: &str) -> Result<Self> {
+        let config: LocalConfig =
+            toml::from_str(content).with_context(|| "Could not parse local config file")?;
+
+        Ok(config)
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Config {
     pub config: Option<GlobalConfig>,
     #[serde(rename = "directory")]

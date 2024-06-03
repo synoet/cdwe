@@ -1,0 +1,11 @@
+variables = [
+  {name = "name", value = "world"},
+] 
+
+aliases = [
+  {name = "hello", commands = ["echo Hello, {{name}}!"]},
+]
+
+commands = ["git fetch -p"]
+
+
