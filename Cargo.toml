@@ -21,6 +21,7 @@ keywords = [
 [dependencies]
 anyhow = "1.0.72"
 clap = { version="4.3.12", features=["derive"] }
+regex = "1.10.4"
 serde = {version = "1.0.171", features = ["derive"]}
 serde_json = "1.0.117"
 sha2 = "0.10.8"
