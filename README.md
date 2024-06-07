@@ -15,7 +15,7 @@ A simple configurable cd wrapper that provides powerful utilities for customizin
 
 ## Features
 
-- **Per Directory Environment Variables**  
+- **Per Directory Environment Variables**
 - **Auto Load .env files in Directories**
 - **Auto Execute Commands in Directories**
 - **Per Directory Aliases**
@@ -178,7 +178,7 @@ dirs = [
 ]
 ```
 
-## Configuration 
+## Configuration
 ### Global Configuration Options
 ```toml
 [config]
@@ -243,6 +243,14 @@ dirs = [
   "/Users/synoet/dev/project-api"
 ]
 ```
+
+### Using CDWE Environment Variables in the paths
+
+If you want to use something like **$HOME** or any other environment variable
+set in a path, you can do so by wrapping the environment variable inside of
+`{{}}`. Using **$HOME** as an example, you would do {{HOME}}. This can make
+using one cdwe.toml across many machines nice if you have different users but a
+similar directory structure for each user.
 
 ## Uninstalling
 1. Run cdwe-remove to clean up all shell artifacts
