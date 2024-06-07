@@ -23,6 +23,19 @@ pub struct Cache {
     values: DirCacheMap,
 }
 
+/// Inserts any cdwe path environment variables into itself and returns
+/// updated path
+fn insert_env_var_into_path(re: &regex::Regex, path: &str) -> String {
+    re.replace_all(path, |caps: &regex::Captures| {
+        if let Some(value) = std::env::var(&caps[1]).ok() {
+            value // If the env var exists, replace with its value
+        } else {
+            caps[0].to_string() // If not, keep the original text
+        }
+    })
+    .to_string()
+}
+
 impl Cache {
     pub fn new(shell: String, hash: String, values: DirCacheMap) -> Self {
         Cache {
@@ -34,6 +47,9 @@ impl Cache {
 
     pub fn from_config(config: &Config, config_hash: &str) -> Self {
         let mut values: DirCacheMap = HashMap::new();
+
+        // Captures the content within {{}}
+        let re = regex::Regex::new(r"\{\{(.*?)\}\}").unwrap();
 
         for directory in &config.directories {
             let variables: Vec<EnvVariable> = match &directory.vars {
@@ -67,7 +83,8 @@ impl Cache {
                 aliases,
             };
 
-            values.insert(directory.path.clone(), dir_cache);
+            let result = insert_env_var_into_path(&re, directory.path.as_str());
+            values.insert(result, dir_cache);
         }
 
         let shell = match &config.config {
@@ -115,4 +132,32 @@ pub fn write_cache(cache: &Cache, home: &str) -> Result<()> {
     });
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::insert_env_var_into_path;
+
+    #[test]
+    fn test_insert_env_var_into_path() {
+        let re = regex::Regex::new(r"\{\{(.*?)\}\}").unwrap();
+        std::env::set_var("TEST_HOME", "/home/user");
+        std::env::set_var("TEST_NAME", "testing");
+        assert_eq!(
+            insert_env_var_into_path(&re, "{{TEST_HOME}}/testing"),
+            "/home/user/testing"
+        );
+        assert_eq!(
+            insert_env_var_into_path(&re, "{{TEST_HOME}}/{{TEST_NAME}}"),
+            "/home/user/testing"
+        );
+        assert_eq!(
+            insert_env_var_into_path(&re, "{{DOES_NOT_EXIST}}/{{TEST_NAME}}"),
+            "{{DOES_NOT_EXIST}}/testing"
+        );
+        assert_eq!(
+            insert_env_var_into_path(&re, "/home/user/testing"),
+            "/home/user/testing"
+        );
+    }
 }
