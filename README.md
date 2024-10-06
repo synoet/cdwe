@@ -1,7 +1,7 @@
 <div align="center">
 
 # ⚡️cdwe (cd with env)
-A simple configurable cd wrapper that provides powerful utilities for customizing your envionment per directory. \
+A simple configurable cd wrapper that provides powerful utilities for customizing your environment per directory. \
 *(For **ZSH** / **BASH** / **FISH** Shells)*
 
 
@@ -30,12 +30,19 @@ cargo install cdwe
 
 2. **Init your shell**
 ```bash
+cdwe init
+# Or explicitly: 
 cdwe init zsh # zsh shells
 cdwe init bash # bash shells
 cdwe init fish # fish shells
 ```
 
-3. **Reload your shell and start using!**
+3. **Reload your shell**
+```bash
+exec "$SHELL"
+```
+
+4. **Start using!**
 ```bash
 # check that env var gets set
 cdwe /Users/synoet/dev/projecta
@@ -257,7 +264,7 @@ similar directory structure for each user.
 ```bash
 cdwe-remove #removes the `source <output>` from your .zshrc/.bashrc/.fish
 
-zsh #reload your shell, use bash or fish if you use those.
+exec "$SHELL" #reload your shell, use bash or fish if you use those.
 ```
 
 2. Uninstall binary

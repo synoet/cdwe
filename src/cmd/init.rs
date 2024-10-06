@@ -3,7 +3,25 @@ use super::Shell;
 use anyhow::{Context, Result};
 use std::path::Path;
 
-pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
+
+fn detect_shell() -> Result<Shell> {
+    let shell_path = std::env::var("SHELL").context("Could not read $SHELL environment variable")?;
+    let shell_name = Path::new(&shell_path)
+        .file_name()
+        .and_then(|os_str| os_str.to_str())
+        .ok_or_else(|| anyhow::anyhow!("Could not determine shell from $SHELL"))?
+        .to_lowercase();
+    Shell::from_string(&shell_name).context(format!(
+        "Unsupported shell '{}'. Supported shells are: bash, zsh, fish.",
+        shell_name
+    ))
+}
+
+pub fn init_shell(config: Option<Config>, shell: Option<Shell>) -> Result<()> {
+    let shell = match shell {
+        Some(shell) => shell,
+        None => detect_shell()?,
+    };
     let home_var = std::env::var("HOME").context("no $HOME set")?;
     let home = Path::new(&home_var);
     let toml_path = std::path::Path::join(home, "cdwe.toml")
@@ -56,7 +74,11 @@ pub fn init_shell(config: Option<Config>, shell: Shell) -> Result<()> {
     Ok(())
 }
 
-pub fn remove_shell(shell: Shell) -> Result<()> {
+pub fn remove_shell(shell: Option<Shell>) -> Result<()> {
+    let shell = match shell {
+        Some(shell) => shell,
+        None => detect_shell()?,
+    };
     let shell_script_target = shell.get_shell_script_target()?;
     let config_path = shell.get_config_path()?;
     let source_string = format!(

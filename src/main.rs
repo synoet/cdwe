@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let cache_path = format!("{}/{}", &home, ".cdwe_cache.json");
 
     match matches.command {
-        cmd::Commands::Init { shell } => init_shell(None, shell.unwrap())?,
+        cmd::Commands::Init { shell } => init_shell(None, shell)?,
         cmd::Commands::Run { old_dir, new_dir } => {
             let local_config_path = format!("{}/{}", new_dir, "cdwe.toml");
             let old_local_config_path = format!("{}/{}", old_dir, "cdwe.toml");
@@ -50,9 +50,9 @@ async fn main() -> Result<()> {
         }
         cmd::Commands::Reload { shell } => {
             let config: Config = Config::from_config_file(&config_path)?;
-            init_shell(Some(config), shell.unwrap())?;
+            init_shell(Some(config), shell)?;
         }
-        cmd::Commands::Remove { shell } => remove_shell(shell.context("no shell passed")?)?,
+        cmd::Commands::Remove { shell } => remove_shell(shell)?,
     }
 
     Ok(())

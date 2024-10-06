@@ -16,17 +16,17 @@ pub enum Commands {
         #[arg(long = "new_dir", required = true)]
         new_dir: String,
     },
-    #[command(arg_required_else_help = true)]
+    #[command(arg_required_else_help = false)]
     Init {
-        #[arg(value_name = "SHELL", required = true)]
+        #[arg(value_name = "SHELL", required = false)]
         shell: Option<Shell>,
     },
     Reload {
-        #[arg(value_name = "SHELL", required = true)]
+        #[arg(value_name = "SHELL", required = false)]
         shell: Option<Shell>,
     },
     Remove {
-        #[arg(value_name = "SHELL", required = true)]
+        #[arg(value_name = "SHELL", required = false)]
         shell: Option<Shell>,
     },
 }

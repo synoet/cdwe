@@ -40,7 +40,7 @@ impl Shell {
     }
 
     pub fn from_string(s: &str) -> Result<Self> {
-        match s {
+        match s.to_lowercase().as_str() {
             "bash" => Ok(Shell::Bash),
             "fish" => Ok(Shell::Fish),
             "zsh" => Ok(Shell::Zsh),
